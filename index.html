@@ -24,15 +24,17 @@
     --radius:16px;
     --font:"Futura","Futura PT","Avenir Next",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 
-    /* ---- dark theme (default) ---- */
-    --bg:#000000; --bg2:#0c0c0c; --card:#141414; --card2:#1c1c1c; --line:#2a2a2a;
+    /* ---- dark theme (default) — angeglichen an Mac Theme.swift ---- */
+    --bg:#000000; --bg2:#0A0A0A; --card:#141414; --card2:#1c1c1c; --line:#2a2a2a;
     --txt:#ffffff; --muted:#9a9a9a; --dim:#666666; --logo:#ffffff;
-    --t-gold:#F5D74C; --t-amber:#F69F14; --t-ochre:#D8A93A; --t-lime:#68C13B;
+    /* t-amber = Mac accent (gold) · t-gold = Mac accentLabel (gedämpft) · t-lime = positive */
+    --t-gold:#A89060; --t-amber:#F5D74C; --t-ochre:#D8A93A; --t-lime:#68C13B;
   }
   :root[data-theme="light"]{
-    --bg:#ffffff; --bg2:#f4f4f5; --card:#f3f3f4; --card2:#e9e9eb; --line:#e2e2e5;
-    --txt:#000000; --muted:#5c5c64; --dim:#a6a6ad; --logo:#000000;
-    --t-gold:#9a7a12; --t-amber:#bd7405; --t-ochre:#8f6c10; --t-lime:#3c8e15;
+    /* warmes Creme wie Mac (F7F5F0 / EDEBE5) */
+    --bg:#F7F5F0; --bg2:#EDEBE5; --card:#EFEDE7; --card2:#E5E2DA; --line:#DAD6CC;
+    --txt:#1A1A1A; --muted:#666666; --dim:#999999; --logo:#1A1A1A;
+    --t-gold:#9B7A30; --t-amber:#F69F14; --t-ochre:#D8A93A; --t-lime:#138F19;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0; background:var(--bg); color:var(--txt);
