@@ -162,7 +162,7 @@
 
   /* ---- Service link button (opens Spotify/Apple/YouTube/SoundCloud) ---- */
   .svc{flex:none; width:30px; height:30px; border-radius:50%; border:1px solid var(--line);
-    background:var(--card2); color:var(--muted); font-size:13px; line-height:1; padding:0;
+    background:var(--card2); color:var(--t-amber); font-size:11px; line-height:1; padding:0 0 0 1px;
     display:flex; align-items:center; justify-content:center; cursor:pointer;}
 
   /* ---- Service sheet (bottom popup) ---- */
@@ -179,7 +179,8 @@
   .sheet a{display:flex; align-items:center; gap:11px; padding:13px 12px; border-radius:12px;
     background:var(--card2); color:var(--txt); text-decoration:none; font-size:14px; font-weight:600;
     margin-bottom:8px;}
-  .sheet a .ic{width:22px; text-align:center; font-size:16px;}
+  .sheet a .ic{width:26px; height:26px; flex:none; display:flex; align-items:center; justify-content:center;}
+  .sheet a .ic svg{width:26px; height:26px; display:block; border-radius:6px;}
   .sheet .close{width:100%; padding:13px; border:0; border-radius:12px; background:transparent;
     color:var(--muted); font-family:var(--font); font-size:13px; font-weight:600; margin-top:4px;}
 
@@ -454,16 +455,21 @@ function playBtn(t){
 /* Energy badge: zeigt dein Rekordbox-Energie-Wort (leer wenn kein Tag) */
 function enTag(t){ return t.ew ? `<span class="tag en">${t.ew}</span>` : ''; }
 
-/* ---------- Open track in music services (Spotify / Apple / YouTube / SoundCloud) ---------- */
+/* ---------- Open track in music services (Beatport / Spotify / SoundCloud / YouTube) ---------- */
 function svcBtn(t){
   const q=encodeURIComponent(t.t+' '+t.a);
-  return `<button class="svc" data-q="${q}" aria-label="Open in music service">↗</button>`;
+  return `<button class="svc" data-q="${q}" aria-label="Open in music service">▶</button>`;
 }
+/* Brand logos (inline SVG) */
+const LOGO_SPOTIFY=`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#1ED760"/><g fill="none" stroke="#000" stroke-width="1.7" stroke-linecap="round"><path d="M5.6 9c4.3-1.1 9.2-.6 12.9 1.4"/><path d="M6.5 12.6c3.5-.9 7.5-.5 10.6 1.2"/><path d="M7.3 15.8c2.7-.6 5.7-.3 8.1 1"/></g></svg>`;
+const LOGO_YOUTUBE=`<svg viewBox="0 0 24 24"><rect x="1" y="5" width="22" height="14" rx="4.5" fill="#FF0000"/><path d="M10 8.6l6 3.4-6 3.4z" fill="#fff"/></svg>`;
+const LOGO_SOUNDCLOUD=`<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#FF5500"/><g fill="#fff"><rect x="6" y="11" width="1.6" height="6" rx=".8"/><rect x="9" y="9" width="1.6" height="8" rx=".8"/><rect x="12" y="10" width="1.6" height="7" rx=".8"/><rect x="15" y="8" width="1.6" height="9" rx=".8"/><rect x="18" y="11" width="1.6" height="6" rx=".8"/></g></svg>`;
+const LOGO_BEATPORT=`<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0f0f0f"/><g fill="#a3ff12"><rect x="6" y="9" width="1.7" height="9" rx=".8"/><rect x="9.2" y="6" width="1.7" height="12" rx=".8"/><rect x="12.4" y="10" width="1.7" height="8" rx=".8"/><rect x="15.6" y="7.5" width="1.7" height="10.5" rx=".8"/></g></svg>`;
 const SVC = [
-  {n:'Spotify',     ic:'🟢', u:q=>'https://open.spotify.com/search/'+q},
-  {n:'Apple Music', ic:'', u:q=>'https://music.apple.com/search?term='+q},
-  {n:'YouTube',     ic:'▶️', u:q=>'https://www.youtube.com/results?search_query='+q},
-  {n:'SoundCloud',  ic:'🟠', u:q=>'https://soundcloud.com/search?q='+q},
+  {n:'Beatport',   ic:LOGO_BEATPORT,   u:q=>'https://www.beatport.com/search?q='+q},
+  {n:'Spotify',    ic:LOGO_SPOTIFY,    u:q=>'https://open.spotify.com/search/'+q},
+  {n:'SoundCloud', ic:LOGO_SOUNDCLOUD, u:q=>'https://soundcloud.com/search?q='+q},
+  {n:'YouTube',    ic:LOGO_YOUTUBE,    u:q=>'https://www.youtube.com/results?search_query='+q},
 ];
 const svcSheet=document.getElementById('svcSheet');
 const svcCard=document.getElementById('svcCard');
@@ -685,9 +691,8 @@ function renderPicker(){
   function draw(){
     const term=q.value.toLowerCase();
     const shown = TRACKS.filter(t=>!term || (t.t+t.a+t.g).toLowerCase().includes(term));
-    shown.slice(0,12).forEach(t=>prefetch(ptOf(t)));
     list.innerHTML = shown
-      .map(t=>`<div class="pick" data-id="${t.id}">${playBtn(t)}${svcBtn(t)}
+      .map(t=>`<div class="pick" data-id="${t.id}">${svcBtn(t)}
           <div class="ti"><div class="t">${t.t}</div>
             <div class="a">${t.a} · <span class="genrepill">${t.g}</span></div></div>
           <div class="meta"><span class="tag key">${t.key}</span>
@@ -710,15 +715,13 @@ function renderBuilder(){
     .sort((a,b)=>b.s.total-a.s.total)
     .slice(0,6);
 
-  sugg.forEach(({t})=>prefetch(ptOf(t)));
-  chain.forEach(id=>prefetch(ptOf(byId(id))));
 
   const chainHtml = chain.map((id,i)=>{
     const t=byId(id);
     return `${i>0?'<div class="connector"></div>':''}
       <div class="chiprow">
         <div class="step">${i+1}</div>
-        <div class="ctrack ${i===0?'first':''}">${playBtn(t)}${svcBtn(t)}
+        <div class="ctrack ${i===0?'first':''}">${svcBtn(t)}
           <div class="ti"><div class="t">${t.t}</div><div class="a">${t.a}</div></div>
           <div class="meta"><span class="tag key">${t.key}</span>
             <span class="tag bpm">${t.bpm}</span>${enTag(t)}</div>
@@ -736,7 +739,7 @@ function renderBuilder(){
     ].join('');
     return `<div class="scard ${cls}" data-add="${t.id}">
         <div class="barbg"></div>
-        <div class="srow">${playBtn(t)}${svcBtn(t)}
+        <div class="srow">${svcBtn(t)}
           <div class="ti"><div class="t">${t.t}</div>
             <div class="a">${t.a} · <span class="genrepill">${t.g}</span></div></div>
           <div class="meta"><span class="tag key">${t.key}</span>
@@ -817,13 +820,12 @@ function mashTrackRow(role, t, cls){
     <span class="mrole ${cls}">${role}</span>
     <div class="minfo"><div class="mname">${esc(t.t)}</div><div class="mart">${esc(t.a)}</div></div>
     <span class="mkey">${t.key}</span><span class="mbpm">${t.bpm}</span>
-    ${playBtn(t)}${svcBtn(t)}</div>`;
+    ${svcBtn(t)}</div>`;
 }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function renderMashup(){
   buildMashups();
-  mashupList.slice(0,8).forEach(m=>{ prefetch(ptOf(m.v)); prefetch(ptOf(m.inst)); });
   const cards = mashupList.map(m=>{
     const stars = mashupStars(m.w, m.delta);
     const starHtml = [0,1,2,3].map(i=>`<span class="mstar ${i<stars?'on':''}">★</span>`).join('');
