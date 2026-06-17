@@ -137,9 +137,11 @@
 
   /* ---- Tab bar ---- */
   .tabbar{display:flex; gap:2px; border-bottom:1px solid var(--line); margin-bottom:18px;}
-  .tab{background:transparent; border:0; font-family:var(--font); font-size:11px; font-weight:700;
-    letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); padding:10px 14px 11px;
-    position:relative; display:flex; align-items:center; gap:6px; cursor:pointer;}
+  .tab{flex:1; background:transparent; border:0; font-family:var(--font); font-size:10.5px; font-weight:700;
+    letter-spacing:.6px; text-transform:uppercase; color:var(--muted); padding:10px 4px 11px;
+    position:relative; display:flex; align-items:center; justify-content:center; gap:5px; cursor:pointer;}
+  .tico{flex:none; width:14px; height:14px; display:flex; align-items:center; justify-content:center;}
+  .tico svg{width:100%; height:100%; display:block;}
   .tab.on{color:var(--t-amber);}
   .tab.on::after{content:""; position:absolute; left:8px; right:8px; bottom:-1px; height:2px;
     background:var(--t-amber); border-radius:2px;}
@@ -453,6 +455,9 @@ function playBtn(t){
   return `<button class="play" data-pt="${pt}">▶</button>`;
 }
 
+/* Energy badge: zeigt dein Rekordbox-Energie-Wort (leer wenn kein Tag) */
+function enTag(t){ return t.ew ? `<span class="tag en">${t.ew}</span>` : ''; }
+
 /* ---------- Open track in music services (Spotify / Apple / YouTube / SoundCloud) ---------- */
 function svcBtn(t){
   const q=encodeURIComponent(t.t+' '+t.a);
@@ -563,11 +568,17 @@ function render(){
 }
 
 /* ---------- Tab bar ---------- */
+const TAB_ICONS = {
+  build:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="8" y1="18" x2="14" y2="18"/><circle cx="4" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.3" fill="currentColor" stroke="none"/></svg>`,
+  mashup:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"/><circle cx="18.5" cy="17" r="1.6"/><circle cx="5.5" cy="17.5" r="1.2"/></svg>`,
+  history:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`,
+  timer:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="9" y1="2.5" x2="15" y2="2.5"/><line x1="12" y1="2.5" x2="12" y2="5"/><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.5"/></svg>`,
+};
 function renderTabs(){
   const tabs=[['build','Sets'],['mashup','Mashup'],['history','History'],['timer','Timer']];
   tabbar.innerHTML = tabs.map(([k,label])=>{
     const badge = (k==='history' && history.length) ? `<span class="tbadge">${history.length}</span>` : '';
-    return `<button class="tab ${activeTab===k?'on':''}" data-tab="${k}">${label}${badge}</button>`;
+    return `<button class="tab ${activeTab===k?'on':''}" data-tab="${k}"><span class="tico">${TAB_ICONS[k]}</span>${label}${badge}</button>`;
   }).join('');
   tabbar.querySelectorAll('[data-tab]').forEach(el=>
     el.onclick=()=>{ activeTab=el.dataset.tab; render(); window.scrollTo({top:0}); });
@@ -601,7 +612,7 @@ function renderHistCard(s){
   const tracksHtml = !open ? '' : `<div class="histtracks">${s.tracks.map((t,i)=>`
       <div class="htrow"><span class="hidx">${i+1}</span>
         <div class="hti"><div class="t">${t.t}</div><div class="a">${t.a}</div></div>
-        <span class="tag key">${t.key}</span><span class="tag bpm">${t.bpm}</span><span class="tag en">E${t.en}</span></div>`).join('')}</div>`;
+        <span class="tag key">${t.key}</span><span class="tag bpm">${t.bpm}</span>${enTag(t)}</div>`).join('')}</div>`;
   return `<div class="histcard ${open?'open':''}">
       <div class="histhead" data-hopen="${s.id}">
         <div class="histinfo">
@@ -685,7 +696,7 @@ function renderPicker(){
             <div class="a">${t.a} · <span class="genrepill">${t.g}</span></div></div>
           <div class="meta"><span class="tag key">${t.key}</span>
             <span class="tag bpm">${t.bpm}</span>
-            <span class="tag en">E${t.en}</span></div>
+            ${enTag(t)}</div>
         </div>`).join('');
     list.querySelectorAll('.pick').forEach(el=>
       el.onclick=()=>{ chain=[+el.dataset.id]; render(); });
@@ -714,7 +725,7 @@ function renderBuilder(){
         <div class="ctrack ${i===0?'first':''}">${playBtn(t)}${svcBtn(t)}
           <div class="ti"><div class="t">${t.t}</div><div class="a">${t.a}</div></div>
           <div class="meta"><span class="tag key">${t.key}</span>
-            <span class="tag bpm">${t.bpm}</span><span class="tag en">E${t.en}</span></div>
+            <span class="tag bpm">${t.bpm}</span>${enTag(t)}</div>
           ${i===chain.length-1 && chain.length>1 ? `<button class="remove" data-rm>×</button>`:''}
         </div>
       </div>`;
@@ -733,7 +744,7 @@ function renderBuilder(){
           <div class="ti"><div class="t">${t.t}</div>
             <div class="a">${t.a} · <span class="genrepill">${t.g}</span></div></div>
           <div class="meta"><span class="tag key">${t.key}</span>
-            <span class="tag bpm">${t.bpm}</span><span class="tag en">E${t.en}</span></div>
+            <span class="tag bpm">${t.bpm}</span>${enTag(t)}</div>
           <button class="add">+</button>
         </div>
         <div class="why">${reasons}</div>
@@ -750,7 +761,7 @@ function renderBuilder(){
     <div class="sectlabel"><span>Your set · <b>${chain.length} ${chain.length===1?'track':'tracks'}</b></span><div class="setbtns"><button class="reset save" id="saveBtn">Save</button><button class="reset" id="resetBtn">Reset</button></div></div>
     <div class="chain">${chainHtml}</div>
 
-    <div class="sectlabel" style="margin-top:20px;">Plays well next <b>from ${last.key} · ${last.bpm} · E${last.en}</b></div>
+    <div class="sectlabel" style="margin-top:20px;">Plays well next <b>from ${last.key} · ${last.bpm}${last.ew?(' · '+last.ew):''}</b></div>
     <div class="sugg">${suggHtml || '<div class="empty">No more tracks left.</div>'}</div>`;
 
   view.querySelectorAll('[data-add]').forEach(el=>
