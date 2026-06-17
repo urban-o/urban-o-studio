@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="URBAN O Studio">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="app-icon.png">
+<link rel="icon" href="app-icon.png">
+<title>URBAN O Studio · Portable</title>
+<style>
+  :root{
+    /* URBAN O brand palette (constant across themes) */
+    --black:#000000;
+    --gold:#F5D74C;      /* Golden Sun */
+    --amber:#F69F14;     /* Deep Amber  – energy / CTA */
+    --ochre:#D8A93A;     /* Organic Ochre */
+    --lime:#68C13B;      /* Fresh Lime */
+    --leaf:#138F19;      /* Deep Leaf Green */
+    --gray:#32373C;
+    --good:#68C13B; --ok:#F5D74C; --meh:#F69F14;
+    --radius:16px;
+    --font:"Futura","Futura PT","Avenir Next",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+
+    /* ---- dark theme (default) ---- */
+    --bg:#000000; --bg2:#0c0c0c; --card:#141414; --card2:#1c1c1c; --line:#2a2a2a;
+    --txt:#ffffff; --muted:#9a9a9a; --dim:#666666; --logo:#ffffff;
+    --t-gold:#F5D74C; --t-amber:#F69F14; --t-ochre:#D8A93A; --t-lime:#68C13B;
+  }
+  :root[data-theme="light"]{
+    --bg:#ffffff; --bg2:#f4f4f5; --card:#f3f3f4; --card2:#e9e9eb; --line:#e2e2e5;
+    --txt:#000000; --muted:#5c5c64; --dim:#a6a6ad; --logo:#000000;
+    --t-gold:#9a7a12; --t-amber:#bd7405; --t-ochre:#8f6c10; --t-lime:#3c8e15;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--txt);
+    font-family:var(--font); -webkit-font-smoothing:antialiased;}
+  body{min-height:100dvh; padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);}
+  .app{max-width:520px; margin:0 auto; padding:16px 14px 120px;}
+  body,.ctrack,.scard,.pick,.search,.arc,.themetoggle,.reset,.tag,.why .reason,.step{transition:background-color .22s ease,color .22s ease,border-color .22s ease;}
+
+  /* ---- Header / Logo ---- */
+  header{display:flex; align-items:center; justify-content:space-between; padding:6px 2px 18px;}
+  .brand{display:flex; flex-direction:column; gap:3px;}
+  .logo{height:34px; display:block; color:var(--logo);}
+  .logo svg{height:100%; width:auto; display:block;}
+  .hdr-right{display:flex; align-items:center; gap:12px;}
+  .themetoggle{width:34px; height:34px; flex:none; border-radius:50%; border:1px solid var(--line);
+    background:var(--card); color:var(--txt); font-size:16px; line-height:1; padding:0;
+    display:flex; align-items:center; justify-content:center;}
+  .appname{font-size:13px; font-weight:600; letter-spacing:2.5px; text-transform:uppercase;
+    color:var(--t-amber); margin-top:7px; display:flex; align-items:center; gap:8px;}
+  .appname .demo{font-size:9px; font-weight:700; letter-spacing:1px; color:var(--black);
+    background:var(--gold); padding:2px 6px; border-radius:5px;}
+  .tagline{font-size:10.5px; color:var(--dim); letter-spacing:1.2px; text-transform:uppercase;}
+  .reset{background:var(--card); border:1px solid var(--line); color:var(--muted);
+    font-family:var(--font); font-size:11px; letter-spacing:1px; text-transform:uppercase;
+    padding:9px 13px; border-radius:11px; font-weight:600;}
+
+  /* ---- Energy arc control ---- */
+  .arc{display:flex; gap:6px; background:var(--card); border:1px solid var(--line);
+    border-radius:13px; padding:5px; margin-bottom:18px;}
+  .arc button{flex:1; background:transparent; border:0; color:var(--muted);
+    font-family:var(--font); font-size:11.5px; font-weight:600; letter-spacing:.5px;
+    padding:9px 4px; border-radius:9px; display:flex; flex-direction:column; align-items:center; gap:3px;
+    text-transform:uppercase;}
+  .arc button .ico{font-size:15px;}
+  .arc button.on{background:var(--amber); color:var(--black); box-shadow:0 4px 14px rgba(246,159,20,.35);}
+
+  .sectlabel{font-size:10.5px; text-transform:uppercase; letter-spacing:1.6px; color:var(--dim);
+    margin:4px 4px 11px; display:flex; justify-content:space-between; align-items:center; font-weight:600;}
+  .sectlabel b{color:var(--t-gold); font-weight:700;}
+
+  /* ---- Chain ---- */
+  .chain{display:flex; flex-direction:column; gap:0;}
+  .chiprow{display:flex; align-items:center; gap:10px;}
+  .step{width:23px; height:23px; flex:none; border-radius:50%; background:var(--card2);
+    border:1px solid var(--line); display:flex; align-items:center; justify-content:center;
+    font-size:11px; color:var(--t-gold); font-weight:700;}
+  .ctrack{flex:1; background:var(--card); border:1px solid var(--line); border-radius:13px;
+    padding:11px 13px; display:flex; align-items:center; gap:10px;}
+  .ctrack.first{border-color:var(--amber);}
+  .ctrack .ti{flex:1; min-width:0;}
+  .ctrack .ti .t{font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .ctrack .ti .a{font-size:11.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .meta{display:flex; gap:6px; flex:none;}
+  .tag{font-size:10.5px; font-weight:700; padding:3px 7px; border-radius:6px; letter-spacing:.3px;}
+  .tag.key{background:rgba(216,169,58,.16); color:var(--t-ochre);}
+  .tag.bpm{background:rgba(104,193,59,.15); color:var(--t-lime);}
+  .tag.en{background:rgba(245,215,76,.14); color:var(--t-gold);}
+  .connector{height:13px; width:2px; background:var(--line); margin-left:11px;}
+  .remove{background:transparent; border:0; color:var(--dim); font-size:18px; padding:0 2px;}
+
+  /* ---- Suggestions ---- */
+  .sugg{display:flex; flex-direction:column; gap:10px;}
+  .scard{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:13px 14px; display:flex; flex-direction:column; gap:9px; position:relative; overflow:hidden;}
+  .scard:active{transform:scale(.985);}
+  .scard .barbg{position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--line);}
+  .scard.s-good .barbg{background:var(--good);}
+  .scard.s-ok .barbg{background:var(--ok);}
+  .scard.s-meh .barbg{background:var(--meh);}
+  .srow{display:flex; align-items:center; gap:10px;}
+  .srow .ti{flex:1; min-width:0;}
+  .srow .ti .t{font-size:15px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .srow .ti .a{font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .add{flex:none; width:38px; height:38px; border-radius:11px; border:0; font-size:24px; font-weight:300;
+    background:var(--amber); color:var(--black); font-family:var(--font);
+    box-shadow:0 4px 14px rgba(246,159,20,.35); display:flex; align-items:center; justify-content:center;}
+  .why{display:flex; flex-wrap:wrap; gap:6px;}
+  .why .reason{font-size:10px; font-weight:600; letter-spacing:.2px; padding:4px 8px; border-radius:7px;
+    background:var(--card2); color:var(--muted);}
+  .why .reason.hi{background:rgba(104,193,59,.14); color:var(--t-lime);}
+  .why .reason.warn{background:rgba(246,159,20,.14); color:var(--t-amber);}
+
+  /* ---- Start picker ---- */
+  .search{width:100%; background:var(--card); border:1px solid var(--line); color:var(--txt);
+    font-family:var(--font); border-radius:13px; padding:13px 14px; font-size:15px; margin-bottom:12px; outline:none;}
+  .search::placeholder{color:var(--dim);}
+  .picklist{display:flex; flex-direction:column; gap:8px;}
+  .pick{background:var(--card); border:1px solid var(--line); border-radius:13px; padding:12px 13px;
+    display:flex; align-items:center; gap:10px;}
+  .pick:active{background:var(--card2);}
+  .pick .ti{flex:1; min-width:0;}
+  .pick .ti .t{font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .pick .ti .a{font-size:11.5px; color:var(--muted);}
+  .genrepill{font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:.5px;}
+
+  .empty{text-align:center; color:var(--dim); font-size:13px; padding:30px 20px; line-height:1.6;}
+  .hint{text-align:center; color:var(--dim); font-size:11px; margin-top:20px; line-height:1.5; letter-spacing:.3px;}
+  .hint b{color:var(--muted); font-weight:600;}
+
+  /* ---- Tab bar ---- */
+  .tabbar{display:flex; gap:2px; border-bottom:1px solid var(--line); margin-bottom:18px;}
+  .tab{background:transparent; border:0; font-family:var(--font); font-size:11px; font-weight:700;
+    letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); padding:10px 14px 11px;
+    position:relative; display:flex; align-items:center; gap:6px; cursor:pointer;}
+  .tab.on{color:var(--t-amber);}
+  .tab.on::after{content:""; position:absolute; left:8px; right:8px; bottom:-1px; height:2px;
+    background:var(--amber); border-radius:2px;}
+  .tbadge{font-size:9px; font-weight:700; min-width:16px; text-align:center; color:var(--black);
+    background:var(--amber); border-radius:8px; padding:1px 5px; letter-spacing:0;}
+
+  /* ---- Save / Reset row buttons ---- */
+  .setbtns{display:flex; gap:6px;}
+  .reset.save{background:var(--amber); color:var(--black); border-color:var(--amber);}
+
+  /* ---- Play / preview button ---- */
+  .play{flex:none; width:30px; height:30px; border-radius:50%; border:1px solid var(--line);
+    background:var(--card2); color:var(--t-amber); font-size:11px; line-height:1; padding:0;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:background-color .2s ease, color .2s ease;}
+  .play.playing{background:var(--amber); color:var(--black); border-color:var(--amber);}
+  .play.loading{color:var(--muted);}
+
+  /* ---- History ---- */
+  .histlist{display:flex; flex-direction:column; gap:9px;}
+  .histcard{background:var(--card); border:1px solid var(--line); border-radius:13px; overflow:hidden;}
+  .histcard.open{border-color:var(--amber);}
+  .histhead{display:flex; align-items:flex-start; gap:10px; padding:12px 13px; cursor:pointer;}
+  .histinfo{flex:1; min-width:0;}
+  .histdate{font-size:10px; color:var(--t-amber); letter-spacing:.5px; font-weight:600;}
+  .histtitle{font-size:13.5px; font-weight:600; margin:2px 0 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .histmeta{font-size:10.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .histdel{flex:none; background:transparent; border:0; font-size:15px; padding:2px 4px; opacity:.7; cursor:pointer;}
+  .histtracks{border-top:1px solid var(--line); padding:6px 10px 10px;}
+  .htrow{display:flex; align-items:center; gap:8px; padding:6px 2px; border-bottom:1px solid var(--line);}
+  .htrow:last-child{border-bottom:0;}
+  .hidx{width:20px; text-align:right; font-size:11px; color:var(--dim); font-weight:600;}
+  .hti{flex:1; min-width:0;}
+  .hti .t{font-size:12.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .hti .a{font-size:10.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+
+  /* ---- Timer ---- */
+  .t-intro{font-size:12px; color:var(--muted); margin:0 2px 18px; line-height:1.5;}
+  .t-block{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px;}
+  .t-row{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;}
+  .t-lbl{font-size:13px; font-weight:600; color:var(--txt);}
+  .t-lbl.small{font-size:10.5px; text-transform:uppercase; letter-spacing:1px; color:var(--t-amber); font-weight:700; display:block; margin-bottom:6px;}
+  .t-val{font-size:20px; font-weight:700; color:var(--t-amber); font-variant-numeric:tabular-nums;}
+  .t-help{font-size:10px; color:var(--dim); margin-top:8px;}
+  .t-slider{-webkit-appearance:none; appearance:none; width:100%; height:5px; border-radius:3px; background:var(--line); outline:none;}
+  .t-slider::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:22px; height:22px; border-radius:50%; background:var(--amber); cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.4);}
+  .t-slider::-moz-range-thumb{width:22px; height:22px; border:0; border-radius:50%; background:var(--amber);}
+  .t-conv{display:flex; align-items:center; gap:12px; margin-top:10px;}
+  .t-num{width:70px; background:var(--bg2); border:1px solid rgba(246,159,20,.45); color:var(--txt);
+    font-family:var(--font); font-size:18px; font-weight:700; text-align:center; padding:8px 6px;
+    border-radius:9px; outline:none; -moz-appearance:textfield;}
+  .t-num::-webkit-outer-spin-button,.t-num::-webkit-inner-spin-button{-webkit-appearance:none; margin:0;}
+  .t-unit{font-size:12px; color:var(--muted);}
+  .t-arrow{font-size:15px; color:var(--t-amber);}
+  .t-out{font-size:17px; font-weight:700; color:var(--t-amber); font-variant-numeric:tabular-nums;}
+  .t-sub{font-size:11px; color:var(--dim); font-variant-numeric:tabular-nums; margin-top:2px;}
+  .t-refrow{display:flex; justify-content:space-between; padding:7px 2px; border-bottom:1px solid var(--line); font-size:12px;}
+  .t-refrow:last-child{border-bottom:0;}
+  .t-refrow b{color:var(--muted); font-weight:600; font-variant-numeric:tabular-nums;}
+</style>
+</head>
+<body>
+<div class="app">
+  <input type="file" id="libInput" accept=".json" style="display:none">
+  <header>
+    <div class="brand">
+      <div class="appname">Studio <span class="demo" id="libBadge">DEMO</span></div>
+      <div class="tagline">Portable Edition</div>
+    </div>
+    <div class="hdr-right">
+      <button class="themetoggle" id="importBtn" aria-label="Import library" title="Import Library from Mac" style="font-size:18px;">📥</button>
+      <button class="themetoggle" id="themeBtn" aria-label="Toggle theme">☀️</button>
+      <div class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1306.83 494.82" aria-label="URBAN O"><g fill="currentColor"><path d="M271.52,336.6c4.96-1.59,7.52-1.79,12.88-2.21,30.53-2.48,65.18,13.67,75.6,39.06,18.41,44.07,58.5,119.25,79.47,121.38,3.05.17,7.26-3.31,11.84-9.77,5.68-8.01,9.62-17.9,11.4-28.47,2.25-13.21,2.71-15.93,4.89-28.73.93-5.44,2.96-21.17,2.59-26.5-2.13-30.24-6.58-57.78-22.98-69.21-4.23-2.95-9.37-4.26-14.52-4.09-3.53.12-7.42.42-11.45.75-14.08,1.11-30.09,2.35-39.75-3.04-11.07-6.23-24.33-24.3-24.4-37.41-.1-16.12,11.43-26.01,22.43-35.64,3.89-3.41,7.52-6.61,10.67-10.05,18.61-20.42,47.27-58.03,67.11-96.31,26.33-51.19,22.26-71.71,14.98-80.11-5.71-6.45-25.12-9.73-35.24-5.96-53.11,19.74-82.64,48.99-107.24,72.4-17.88,17.09-32.43,30.57-50.22,34.55-11.94,2.69-20.09,6.8-24.94,12.58-7.83,9.3-6.64,22.32-5.39,37.66,1.23,15.05,2.56,32.42-4.63,50.54-8.8,22.06-17.95,44.4-27.34,67.02-10.36,28.83-21.08,58.22-31.85,88.21-1.81,5-.53,16.39,3.47,22.19.9,1.26,2.33,2.81,4.09,2.89,19.15.88,26.92-18.3,37.55-44.15,8.05-19.72,17.92-43.56,35.55-63.98,1.38-1.59,3.17-2.78,5.15-3.5l.27-.1ZM322.39,257.42c-4.05,4.08-14.03,8.87-20.24,9.51-.99.1-1.87.1-2.63-.03-5.62-.93-10.36-7.35-13.05-17.41-5.83-22.08.4-42.59,9.46-51.95,14.77-15.17,35.73-20.44,52.38-23.23,9.94-1.69,19.54-5.23,28.5-10.6,7.35-4.4,14.67-8.79,21.96-13.17,1.56-.96,3.44-1.12,5.04-.45,1.58.65,2.58,2.04,2.69,3.67,1.1,16.61-10.1,28.15-21.09,39.25-1.65,1.68-3.31,3.34-4.91,5.01-18.88,19.69-38.24,39.5-58.11,59.4Z"/><path d="M919.91,127.7c3.94,2.93,7.27,6.65,9.53,11.01,1.28,2.48,2.02,4.66,1.96,6.1-.68,15.33-7.09,28.16-14.24,41.12-.75,1.36-1.5,2.72-2.26,4.08-1.32,2.45-1.19,5.74.43,8.65,1.51,2.75,4.61,4.17,7.08,3.22,2-.77,6.81-2.8,8.29-5.15,15.48-24.43,28.54-33.45,43.83-57.22,6.3-9.83,12.18-18.17,19.57-24.07,7.37-5.89,16.25-9.3,28.56-9.19,5.17.02,10.18,3.47,14.11,9.62,9.75,15.37,14.9,31.86-2.58,64.83-19.83,37.09-22.8,78.45-6.87,128.11,8.57,26.53,9.97,47.27,3.32,57.72-3.37,5.34-8.85,7.91-16.2,7.61-.11,0-.21-.01-.32-.01-7.55-.38-14.12-3.39-20.06-9.16-21.67-21.31-28.82-73.56-33.87-113.28-.79-6.09-2.81-12.38-6.18-19.25-1.57-3.24-4.45-5.61-7.68-6.36-3.17-.75-6,.26-7.56,2.68-8.14,12.54-12.83,25.15-18.26,39.96-10.6,28.87-21.38,58.59-32.47,89.5-6.36,17.72-26.95,26.62-44.64,18.94-4.77-2.06-7.92-7.61-7.15-12.61,2.8-18.33,9.31-33.65,15.49-48.28,12.03-28.29,21.82-52.07-4.09-78.48-8.69-8.93-5.52-28.4-2.37-34.35,7-13.24,12.86-19.02,19.61-25.73,8.72-8.65,18.53-18.48,33.71-45.84,1.04-1.86,3.44-3.82,6.21-5.37,4.7-2.64,10.54-2.21,14.87,1.01l.24.18Z"/><path d="M536.51,141.95c6.01-30.06,11.67-59.57,17.03-88.96,1.72-9.36,5.35-40.93-17.61-52.03-4-1.95-9.06-.84-12.31,2.63-20.38,21.81-23.76,58.44-24.43,73.35-2.07,53.76-22.02,123.53-60.44,153.38-11.17,8.67-23.38,23.81-25.23,38.43-1.01,8.03,1.22,15.09,6.7,20.96,10.75,11.53,41.63-2.51,54.69-12.25,1.1-.84,1.54-.31,1.8.59,6.56,27.06,28.1,38.32,45.08,42.68,25.12,6.54,53.48,1.29,61.79-7.95,17.05-18.92,30.83-37.85,41.23-56.22.48-.93,1.08-.91,1.78-.2,18.43,18.23,73.58,41.61,111.79,8.93,5.67-4.86,9.92-6.43,13.39-4.98,5.2,2.17,7.1,10.49,9.37,20.29,3.07,13.32,6.64,28.79,19.27,30.41,6.58.82,24.61-6.65,24.62-14.07,2.87-19.16,5.7-37.92,8.53-56.35,1.18-7.65,1.91-15.47,2.51-22.17.96-10.55,5.56-23.47,13.97-39.37,3.02-5.73,3.68-13.77,2.67-22.57-2.13-18.38-10.86-35.65-24.23-44.35-13.79-8.99-25.96-9.05-35.07-8.14-5.51.55-10.91,1.6-16.2,3.01-12.51,3.33-33.98,10.66-39.01,22.1-13.71,31.22-21.19,37.62-50.74,52.32-3.96,1.98-11.11,6.3-18.36,13.36-1.17,1.07-2.26,1.92-1.9-1.03,2.57-19.53.57-38.02-5.8-55.03-1.92-5.17-6.03-9.48-11.21-11.88-29.94-13.68-58.39-.14-92.01,15.54-1.22.66-1.98.75-1.69-.44ZM600.09,210.31c-3.2,4.75-7.61,12.17-10.2,16.74-5.75,10.16-4.76,17.34-8.2,26.46-3.35,8.91-22.2,18.85-31.19,21.88t0,0c-7.15,2.42-15.02.73-20.61-4.31-19.32-17.46-18.99-39.96-8.09-69.9,5.43-14.95,16.08-27.05,31.58-36.14,9.89-5.78,27.47-7.16,38.29,2.46,18.42,14.39,18.37,28.63,8.42,42.8ZM705.82,255.49c-3.17-.02-7.58-2.5-11.99-6.74-4.21-4.05-9.04-10.46-8.86-15.25.63-16.91,19.1-29.6,32.42-38.84.83-.57,1.66-1.15,2.49-1.72,4.16-2.92,8.11-6.04,11.88-9.03,14.26-11.31,27.55-21.95,49.34-17.93,1.77.33,3.39,1.41,4.43,3,1.08,1.61,1.45,3.52,1.03,5.25-3.52,14.16-7.06,28.47-10.63,42.96-1.33,5.4-4.69,9.77-9.46,12.31-11.45,6.08-22.96,12.22-34.56,18.41-8.35,5.1-17.03,7.8-26.1,7.59Z"/><path d="M87.1,266.05c3.8,4.41,10.38,6.49,18.56,5.79.86-.07,1.78-.17,2.82-.34.03,0,.05,0,.07,0,11.56-1.87,23.83-8.65,29.13-16.15,22.33-31.59,35.7-44.26,47.15-78.31.88-2.62,1.89-5.2,3.25-7.6,11.4-20.14,31.55-22.97,41.02-24.07.47-.05.92-.11,1.38-.14,2.08-.16,4.02.48,5.31,1.74.88.92,1.44,3.48,1.44,3.48,0,0,.2,1.02.49,2.31,2.13,9.5,1.23,19.42-2.54,28.4-6.37,15.14-16.49,32.23-27.22,50.98-1.58,2.76-3.18,5.5-4.72,8.07-12.65,21.34-22.24,36.4-7.22,60.56,7.49,12.13,2.05,32.69-12.15,44.25-4.43,3.61-13.43,6.13-22.88,6.44-3.84.13-7.58-.12-10.85-.73-6.31-1.17-10.22-3.56-11.01-6.72-3.79-15.37-7.54-30.35-11.3-45.01-.07-.27-.61-2.34-.68-2.62-.12-.7-.56-.62-1.28.1-.83.72-2.93,2.76-3.76,3.49-30.04,26.68-76.67,48.35-103.12,49.3-4.73.2-8.56-.28-11.4-1.39-5.48-2.21-9.9-19.6-6.29-24.94,26.62-39.97,47.04-74.58,69.79-120.14,6.05-10.46,22.04-32.6,31.86-35.21,4.03-1.06,7.38-1.75,10.28-2.13,10.71-1.39,16.67,1.37,19.83,9.3,5.89,14.62.07,33.25-15.2,47.16-14.03,12.88-28.87,26.02-31.29,42.43-.11.64.07,1.21.51,1.71Z"/><path d="M1086.77,294.12c-5.53,4.8-13.44,5.47-22.75,1.87-3.17-1.21-6.17-5-8.45-10.58-3.93-9.61-4.23-20.58-.81-24.06,6.15-6.19,19.62-9.28,30.01-6.77,5.11,1.24,8.96,5.52,9.66,10.73,1.6,11.92-1.17,23.16-7.67,28.81Z"/><path d="M1096.25,220.72c-5.41,4.53-13.05,5.06-22,1.52-3.03-1.2-5.9-4.82-8.04-10.2-3.67-9.23-3.81-19.77-.44-23.08,5.1-5.03,15.28-7.88,24.33-7.11,1.33.11,2.63.3,3.89.58,5.42,1.18,9.52,5.79,10.1,11.31,1.19,11.28-1.63,21.76-7.85,26.97Z"/><path d="M1215.86,139.41c-5.05,2.24-9.67,5.38-13.58,9.28-33.67,33.66-49.74,60.84-64.2,98.84-5.19,13.51-7.41,28.97-6.5,46.02.59,11.29,1.21,22.68,1.86,34.18,1.22,22.53,19.59,47.05,42.93,56.38,23.73,9.49,48.38,6.81,63.85-6.3,42.37-36.23,76.54-108.15,63.97-168.88-4.05-20.39-12.7-37.65-25.66-51.15-4.63-4.82-12.15-10.51-20.39-15.43-.38-.23-.77-.46-1.16-.68-12.54-7.31-27.85-8.14-41.13-2.25h0ZM1258.8,232.34c4.27,23.49,2.01,44-6.13,59.46-8.14,15.48-22.16,25.9-40.74,28.81-1.04.17-2.11.24-3.19.23-5.74-.07-12.12-2.55-17.62-6.97-6.55-5.24-10.86-12.29-11.86-19.28-5.01-35.41,11.03-66.74,42.67-86.04,3.86-2.34,9.11-2.52,14.81-.52,5.69,2,11.14,5.93,15.38,11.09,3.53,4.26,5.91,8.97,6.68,13.23Z"/></g></svg></div>
+    </div>
+  </header>
+
+  <nav class="tabbar" id="tabbar"></nav>
+
+  <div id="view"></div>
+
+  <p class="hint" id="hint"></p>
+</div>
+
+<script>
+/* ---------------- DEMO DATA: real tracks (Deezer-verified previews) ----------------
+   Replaced by your Rekordbox library via "Import Library" button. */
+const DEMO_TRACKS = [
+  {id:1,  t:"Mwaki",                          a:"Zerb",                 g:"Afro House", bpm:122, key:"8A",  en:6},
+  {id:2,  t:"The Rapture Pt.III",             a:"&ME",                  g:"Afro House", bpm:121, key:"7A",  en:5},
+  {id:3,  t:"SBCNCSLY",                        a:"Black Coffee",         g:"Afro House", bpm:120, key:"6A",  en:4},
+  {id:4,  t:"Drive",                           a:"Black Coffee",         g:"Afro House", bpm:123, key:"9A",  en:5},
+  {id:5,  t:"Come With Me",                     a:"Nora En Pure",         g:"House",      bpm:121, key:"7A",  en:4},
+  {id:6,  t:"Home",                            a:"Solomun",              g:"Tech House", bpm:123, key:"8A",  en:6},
+  {id:7,  t:"Hey Hey",                          a:"Dennis Ferrer",        g:"House",      bpm:124, key:"9A",  en:6},
+  {id:8,  t:"One Question",                     a:"Cloonee",              g:"Tech House", bpm:126, key:"10A", en:7},
+  {id:9,  t:"Losing It",                        a:"Fisher",               g:"Tech House", bpm:125, key:"10A", en:8},
+  {id:10, t:"Drugs From Amsterdam",             a:"Mau P",                g:"Tech House", bpm:126, key:"11A", en:8},
+  {id:11, t:"Lose Control",                     a:"Meduza",               g:"House",      bpm:124, key:"9A",  en:7},
+  {id:12, t:"In The Dark",                      a:"Purple Disco Machine", g:"House",      bpm:122, key:"8B",  en:5},
+  {id:13, t:"Body",                            a:"Loud Luxury",          g:"House",      bpm:123, key:"8B",  en:6},
+  {id:14, t:"Music Sounds Better With You",     a:"Stardust",             g:"House",      bpm:124, key:"9B",  en:6},
+  {id:15, t:"Gabriel",                          a:"Roy Davis Jr.",        g:"House",      bpm:125, key:"11A", en:6},
+];
+
+/* Load library from localStorage (imported via tracks.json) or fall back to demo */
+let TRACKS = DEMO_TRACKS;
+let librarySource = 'demo'; // 'demo' | 'imported'
+(function(){
+  try{
+    const saved = localStorage.getItem('sb-library');
+    if(saved){
+      const parsed = JSON.parse(saved);
+      if(Array.isArray(parsed) && parsed.length > 0){
+        TRACKS = parsed;
+        librarySource = 'imported';
+      }
+    }
+  }catch(e){}
+})();
+
+let chain = [];          // track ids in order
+let arcDir = "up";       // up | hold | down
+
+/* ---------- App state: tabs, history, timer ---------- */
+let activeTab = "build"; // build | history | timer
+let openHist = null;     // expanded history set id
+let mixSeconds = 150;    // timer: mix time per song (default 2:30)
+let timerSong = "10";
+let timerMin = "60";
+const DEFAULT_MIX = 150; // assumed seconds/song for history length estimates
+
+let history = [];
+try{ history = JSON.parse(localStorage.getItem('sb-history') || '[]'); }catch(e){ history = []; }
+function saveHistory(){ try{ localStorage.setItem('sb-history', JSON.stringify(history)); }catch(e){} }
+function addToHistory(){
+  const snap = chain.map(id=>{ const t=byId(id); return {t:t.t,a:t.a,g:t.g,bpm:t.bpm,key:t.key,en:t.en}; });
+  history.unshift({ id:'s'+Date.now(), ts:Date.now(), arc:arcDir, tracks:snap });
+  saveHistory();
+}
+function deleteSet(id){ history = history.filter(s=>s.id!==id); saveHistory(); }
+
+function fmtHMS(sec){
+  const tot=Math.round(Math.max(sec,0)), h=Math.floor(tot/3600), m=Math.floor((tot%3600)/60), s=tot%60;
+  return h>0 ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${m}:${String(s).padStart(2,'0')}`;
+}
+function fmtDate(ts){
+  const d=new Date(ts), mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+  return `${d.getDate()} ${mo} ${d.getFullYear()}, ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function arcLabel(a){ return a==='up'?'Build up':(a==='down'?'Wind down':'Hold'); }
+function txt(id,s){ const e=document.getElementById(id); if(e) e.textContent=s; }
+
+/* ---------- Audio previews (30s clips via Deezer, JSONP = no CORS) ---------- */
+const audioEl = new Audio();
+let playingPt = null;          // pt string currently playing
+const previewCache = {};       // pt -> url | 'none'
+const inflight = {};
+audioEl.addEventListener('ended', ()=>{ playingPt=null; refreshPlay(); });
+
+function ptOf(t){ return t.t+'|||'+t.a; }
+
+function jsonp(url){
+  return new Promise((resolve,reject)=>{
+    const cb='dz_'+Math.random().toString(36).slice(2);
+    const s=document.createElement('script');
+    let done=false;
+    const cleanup=()=>{ try{ delete window[cb]; }catch(e){ window[cb]=undefined; } if(s.parentNode) s.remove(); };
+    window[cb]=(data)=>{ done=true; resolve(data); cleanup(); };
+    s.onerror=()=>{ if(!done){ reject(new Error('net')); cleanup(); } };
+    s.src=url+(url.includes('?')?'&':'?')+'output=jsonp&callback='+cb;
+    document.body.appendChild(s);
+    setTimeout(()=>{ if(!done){ reject(new Error('timeout')); cleanup(); } }, 8000);
+  });
+}
+
+async function lookupPreview(pt){
+  if(pt in previewCache) return previewCache[pt];
+  if(inflight[pt]) return inflight[pt];
+  const [title,artist]=pt.split('|||');
+  inflight[pt]=(async()=>{
+    let url='none';
+    try{
+      let d=await jsonp('https://api.deezer.com/search?q='+encodeURIComponent('artist:"'+artist+'" track:"'+title+'"')+'&limit=1');
+      if(!(d&&d.data&&d.data.length)) d=await jsonp('https://api.deezer.com/search?q='+encodeURIComponent(title+' '+artist)+'&limit=1');
+      const hit=d&&d.data&&d.data[0];
+      if(hit&&hit.preview) url=hit.preview;
+    }catch(e){ url='none'; }
+    previewCache[pt]=url; delete inflight[pt]; return url;
+  })();
+  return inflight[pt];
+}
+function prefetch(pt){ lookupPreview(pt); }
+
+function refreshPlay(){
+  document.querySelectorAll('.play').forEach(b=>{
+    if(b.classList.contains('loading')) return;
+    if(b.dataset.pt===playingPt){ b.textContent='⏸'; b.classList.add('playing'); }
+    else { b.textContent='▶'; b.classList.remove('playing'); }
+  });
+}
+
+async function playPreview(btn){
+  const pt=btn.dataset.pt||'';
+  if(playingPt===pt && !audioEl.paused){ audioEl.pause(); playingPt=null; refreshPlay(); return; }
+  audioEl.pause();
+  const cached=previewCache[pt];
+  if(cached && cached!=='none'){          // synchronous play within the tap → iOS-friendly
+    audioEl.src=cached;
+    audioEl.play().then(()=>{ playingPt=pt; refreshPlay(); })
+                  .catch(()=>{ btn.textContent='✕'; setTimeout(refreshPlay,1500); });
+    return;
+  }
+  if(cached==='none'){ btn.textContent='✕'; setTimeout(refreshPlay,1500); return; }
+  btn.classList.add('loading'); btn.textContent='⏳';
+  const url=await lookupPreview(pt);
+  btn.classList.remove('loading');
+  if(url && url!=='none'){
+    audioEl.src=url;
+    try{ await audioEl.play(); playingPt=pt; refreshPlay(); }
+    catch(e){ refreshPlay(); }            // iOS may need a second tap the very first time
+  } else { btn.textContent='✕'; setTimeout(refreshPlay,1500); }
+}
+
+document.addEventListener('click',(e)=>{
+  const b=e.target.closest('.play');
+  if(!b) return;
+  e.stopPropagation(); e.preventDefault();
+  playPreview(b);
+}, true);
+
+function playBtn(t){
+  const pt=(t.t+'|||'+t.a).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  return `<button class="play" data-pt="${pt}">▶</button>`;
+}
+
+/* ---------- Camelot harmonic logic ---------- */
+function parseKey(k){ return {n:parseInt(k), l:k.slice(-1)}; }
+function wheelDist(a,b){ let d=Math.abs(a-b)%12; return Math.min(d,12-d); }
+
+function harmonic(fromKey,toKey){
+  const f=parseKey(fromKey), t=parseKey(toKey);
+  if(f.n===t.n && f.l===t.l) return {score:100,label:"Same key",cls:"hi"};
+  if(f.n===t.n && f.l!==t.l) return {score:88,label:(t.l==="B"?"Major shift":"Minor shift"),cls:"hi"};
+  const d=wheelDist(f.n,t.n);
+  if(f.l===t.l && d===1) return {score:92,label:"Harmonic neighbor",cls:"hi"};
+  if(f.l===t.l && d===2) return {score:68,label:"Energy boost (+2)",cls:""};
+  if(f.l!==t.l && d===1) return {score:55,label:"Smooth transition",cls:""};
+  if(f.l===t.l && d===3) return {score:42,label:"Bold jump",cls:"warn"};
+  return {score:22,label:"Risky – needs a bridge",cls:"warn"};
+}
+
+function bpmFit(from,to){
+  const pct=Math.abs(to-from)/from*100;
+  const diff=(to>from?"+":"")+(to-from);
+  if(pct<=1.5) return {score:100,label:"BPM match",cls:"hi"};
+  if(pct<=3)   return {score:80,label:diff+" BPM",cls:""};
+  if(pct<=5)   return {score:55,label:diff+" BPM (pitch)",cls:"warn"};
+  return {score:25,label:diff+" BPM – too far",cls:"warn"};
+}
+
+function energyFit(from,to){
+  const d=to-from;
+  let want;
+  if(arcDir==="up")        want = d>=0 && d<=2 ? 100 : (d===3?60 : d<0?40:35);
+  else if(arcDir==="down") want = d<=0 && d>=-2 ? 100 : (d===-3?60 : d>0?40:35);
+  else /* hold */          want = Math.abs(d)<=1 ? 100 : (Math.abs(d)===2?60:35);
+  const sign = d>0?"+"+d : (d<0?String(d):"±0");
+  return {score:want,label:"Energy "+sign,cls: want>=90?"hi":(want<=40?"warn":"")};
+}
+
+function score(fromTrack,toTrack){
+  const h=harmonic(fromTrack.key,toTrack.key);
+  const b=bpmFit(fromTrack.bpm,toTrack.bpm);
+  const e=energyFit(fromTrack.en,toTrack.en);
+  const total = h.score*0.5 + b.score*0.28 + e.score*0.22;
+  return {total,h,b,e};
+}
+
+const byId = id => TRACKS.find(x=>x.id===id);
+
+/* ---------- Render ---------- */
+const view=document.getElementById('view');
+const hint=document.getElementById('hint');
+const tabbar=document.getElementById('tabbar');
+
+/* ---------- Theme (dark / light) ---------- */
+const themeBtn=document.getElementById('themeBtn');
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  themeBtn.textContent = t==='dark' ? '☀️' : '🌙';
+  try{ localStorage.setItem('sb-theme',t); }catch(e){}
+}
+let savedTheme=null; try{ savedTheme=localStorage.getItem('sb-theme'); }catch(e){}
+applyTheme(savedTheme || ((window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark'));
+themeBtn.onclick=()=>applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');
+
+/* ---------- Library import (tracks.json from Mac) ---------- */
+const libBadge = document.getElementById('libBadge');
+const libInput = document.getElementById('libInput');
+
+function updateLibBadge(){
+  if(libBadge){
+    libBadge.textContent = librarySource==='imported' ? TRACKS.length+' TRACKS' : 'DEMO';
+    libBadge.style.background = librarySource==='imported' ? 'var(--leaf)' : '';
+  }
+}
+updateLibBadge();
+
+document.getElementById('importBtn').onclick = () => libInput.click();
+
+libInput.onchange = (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try{
+      const data = JSON.parse(ev.target.result);
+      if(!Array.isArray(data) || data.length === 0) throw new Error('empty');
+      TRACKS = data;
+      librarySource = 'imported';
+      chain = [];
+      try{ localStorage.setItem('sb-library', JSON.stringify(data)); }catch(err){}
+      updateLibBadge();
+      render();
+      alert('✅ Library imported: '+data.length+' tracks loaded.');
+    }catch(err){
+      alert('❌ Could not read tracks.json. Make sure you exported it from URBAN O Studio on your Mac.');
+    }
+  };
+  reader.readAsText(file);
+  libInput.value='';
+};
+
+function render(){
+  renderTabs();
+  if(activeTab==='history'){ hint.innerHTML=''; renderHistory(); return; }
+  if(activeTab==='timer'){ hint.innerHTML=''; renderTimer(); return; }
+  if(chain.length===0){ renderPicker(); return; }
+  renderBuilder();
+}
+
+/* ---------- Tab bar ---------- */
+function renderTabs(){
+  const tabs=[['build','Build'],['history','History'],['timer','Timer']];
+  tabbar.innerHTML = tabs.map(([k,label])=>{
+    const badge = (k==='history' && history.length) ? `<span class="tbadge">${history.length}</span>` : '';
+    return `<button class="tab ${activeTab===k?'on':''}" data-tab="${k}">${label}${badge}</button>`;
+  }).join('');
+  tabbar.querySelectorAll('[data-tab]').forEach(el=>
+    el.onclick=()=>{ activeTab=el.dataset.tab; render(); window.scrollTo({top:0}); });
+}
+
+/* ---------- History tab ---------- */
+function renderHistory(){
+  if(history.length===0){
+    view.innerHTML = `<div class="sectlabel">History</div>
+      <div class="empty">No sets saved yet.<br>Build a set under <b>Build</b> and tap <b>Save</b> to keep it here.</div>`;
+    return;
+  }
+  view.innerHTML = `
+    <div class="sectlabel"><span>History · <b>${history.length} ${history.length===1?'set':'sets'}</b></span>
+      <button class="reset" id="clearAll">Clear all</button></div>
+    <div class="histlist">${history.map(renderHistCard).join('')}</div>`;
+  document.getElementById('clearAll').onclick=()=>{
+    if(confirm('Delete all saved sets?')){ history=[]; openHist=null; saveHistory(); render(); }
+  };
+  view.querySelectorAll('[data-hopen]').forEach(el=>
+    el.onclick=()=>{ openHist = (openHist===el.dataset.hopen) ? null : el.dataset.hopen; render(); });
+  view.querySelectorAll('[data-hdel]').forEach(el=>
+    el.onclick=(e)=>{ e.stopPropagation(); deleteSet(el.dataset.hdel); render(); });
+}
+
+function renderHistCard(s){
+  const open = openHist===s.id;
+  const dur = fmtHMS(s.tracks.length*DEFAULT_MIX);
+  const genres = [...new Set(s.tracks.map(t=>t.g))].join(' · ');
+  const title = s.tracks.length>1 ? `${s.tracks[0].t} → ${s.tracks[s.tracks.length-1].t}` : s.tracks[0].t;
+  const tracksHtml = !open ? '' : `<div class="histtracks">${s.tracks.map((t,i)=>`
+      <div class="htrow"><span class="hidx">${i+1}</span>
+        <div class="hti"><div class="t">${t.t}</div><div class="a">${t.a}</div></div>
+        <span class="tag key">${t.key}</span><span class="tag bpm">${t.bpm}</span><span class="tag en">E${t.en}</span></div>`).join('')}</div>`;
+  return `<div class="histcard ${open?'open':''}">
+      <div class="histhead" data-hopen="${s.id}">
+        <div class="histinfo">
+          <div class="histdate">${fmtDate(s.ts)}</div>
+          <div class="histtitle">${title}</div>
+          <div class="histmeta">${s.tracks.length} tracks · ≈ ${dur} · ${arcLabel(s.arc)}${genres?' · '+genres:''}</div>
+        </div>
+        <button class="histdel" data-hdel="${s.id}" aria-label="Delete">🗑️</button>
+      </div>${tracksHtml}
+    </div>`;
+}
+
+/* ---------- Timer tab ---------- */
+function renderTimer(){
+  view.innerHTML = `
+    <div class="sectlabel">Set Timer</div>
+    <p class="t-intro">Work out where you are in your set, time-wise — independent of the build parameters.</p>
+    <div class="t-block">
+      <div class="t-row"><span class="t-lbl">Mix time per song</span><span class="t-val" id="tMix">—</span></div>
+      <input type="range" id="tSlider" class="t-slider" min="60" max="360" step="10" value="${mixSeconds}">
+      <div class="t-help">How long you play a song on average (mixed), e.g. 2:30</div>
+    </div>
+    <div class="t-block">
+      <div class="t-lbl">At which song?</div>
+      <div class="t-conv">
+        <input type="number" inputmode="numeric" id="tSong" class="t-num" value="${timerSong}">
+        <span class="t-arrow">→</span>
+        <div><div class="t-out" id="tSongOut">—</div><div class="t-sub" id="tSongSub">—</div></div>
+      </div>
+    </div>
+    <div class="t-block">
+      <div class="t-lbl">At which minute?</div>
+      <div class="t-conv">
+        <input type="number" inputmode="numeric" id="tMin" class="t-num" value="${timerMin}">
+        <span class="t-unit">min</span><span class="t-arrow">→</span>
+        <div class="t-out" id="tMinOut">—</div>
+      </div>
+    </div>
+    <div class="t-block">
+      <div class="t-lbl small" id="tRefLbl">Quick reference</div>
+      <div id="tRef"></div>
+    </div>`;
+  const slider=document.getElementById('tSlider');
+  const song=document.getElementById('tSong');
+  const mn=document.getElementById('tMin');
+  slider.oninput=()=>{ mixSeconds=+slider.value; updateTimer(); };
+  song.oninput=()=>{ timerSong=song.value; updateTimer(); };
+  mn.oninput=()=>{ timerMin=mn.value; updateTimer(); };
+  updateTimer();
+}
+
+function updateTimer(){
+  const mix=Math.max(mixSeconds,1);
+  const n=Math.max(parseInt(timerSong)||1,1);
+  const m=Math.max(parseFloat(timerMin)||0,0);
+  txt('tMix',fmtHMS(mix));
+  txt('tSongOut','≈ '+fmtHMS((n-1)*mix)+' into set');
+  txt('tSongSub','plays until '+fmtHMS(n*mix));
+  txt('tMinOut','≈ Song '+(Math.floor((m*60)/mix)+1));
+  txt('tRefLbl','Quick reference (at '+fmtHMS(mix)+'/song)');
+  const ref=document.getElementById('tRef');
+  if(ref) ref.innerHTML=[60,90,120,180,240].map(mins=>
+    `<div class="t-refrow"><span>${mins} min set</span><b>≈ ${Math.floor((mins*60)/mix)} songs</b></div>`).join('');
+}
+
+function renderPicker(){
+  hint.innerHTML="Sample tracks &mdash; your real Rekordbox library plugs in later.";
+  view.innerHTML = `
+    <div class="sectlabel">Pick a starting track</div>
+    <input class="search" id="q" placeholder="Search – title, artist, genre…" autocomplete="off">
+    <div class="picklist" id="picklist"></div>`;
+  const q=document.getElementById('q');
+  const list=document.getElementById('picklist');
+  function draw(){
+    const term=q.value.toLowerCase();
+    list.innerHTML = TRACKS
+      .filter(t=>!term || (t.t+t.a+t.g).toLowerCase().includes(term))
+      .map(t=>`<div class="pick" data-id="${t.id}">${playBtn(t)}
+          <div class="ti"><div class="t">${t.t}</div>
+            <div class="a">${t.a} · <span class="genrepill">${t.g}</span></div></div>
+          <div class="meta"><span class="tag key">${t.key}</span>
+            <span class="tag bpm">${t.bpm}</span>
+            <span class="tag en">E${t.en}</span></div>
+        </div>`).join('');
+    list.querySelectorAll('.pick').forEach(el=>
+      el.onclick=()=>{ chain=[+el.dataset.id]; render(); });
+    refreshPlay();
+  }
+  q.oninput=draw; draw();
+}
+
+function renderBuilder(){
+  hint.innerHTML="Tap <b>+</b> to add the next track. Order = your set.";
+  const last = byId(chain[chain.length-1]);
+
+  const sugg = TRACKS.filter(t=>!chain.includes(t.id))
+    .map(t=>({t, s:score(last,t)}))
+    .sort((a,b)=>b.s.total-a.s.total)
+    .slice(0,6);
+
+  sugg.forEach(({t})=>prefetch(ptOf(t)));
+  chain.forEach(id=>prefetch(ptOf(byId(id))));
+
+  const chainHtml = chain.map((id,i)=>{
+    const t=byId(id);
+    return `${i>0?'<div class="connector"></div>':''}
+      <div class="chiprow">
+        <div class="step">${i+1}</div>
+        <div class="ctrack ${i===0?'first':''}">${playBtn(t)}
+          <div class="ti"><div class="t">${t.t}</div><div class="a">${t.a}</div></div>
+          <div class="meta"><span class="tag key">${t.key}</span>
+            <span class="tag bpm">${t.bpm}</span><span class="tag en">E${t.en}</span></div>
+          ${i===chain.length-1 && chain.length>1 ? `<button class="remove" data-rm>×</button>`:''}
+        </div>
+      </div>`;
+  }).join('');
+
+  const suggHtml = sugg.map(({t,s})=>{
+    const cls = s.total>=78?'s-good':(s.total>=58?'s-ok':'s-meh');
+    const reasons = [
+      `<span class="reason ${s.h.cls}">${last.key}→${t.key} · ${s.h.label}</span>`,
+      `<span class="reason ${s.b.cls}">${s.b.label}</span>`,
+      `<span class="reason ${s.e.cls}">${s.e.label}</span>`
+    ].join('');
+    return `<div class="scard ${cls}" data-add="${t.id}">
+        <div class="barbg"></div>
+        <div class="srow">${playBtn(t)}
+          <div class="ti"><div class="t">${t.t}</div>
+            <div class="a">${t.a} · <span class="genrepill">${t.g}</span></div></div>
+          <div class="meta"><span class="tag key">${t.key}</span>
+            <span class="tag bpm">${t.bpm}</span><span class="tag en">E${t.en}</span></div>
+          <button class="add">+</button>
+        </div>
+        <div class="why">${reasons}</div>
+      </div>`;
+  }).join('');
+
+  view.innerHTML = `
+    <div class="arc" id="arc">
+      <button data-dir="up"   class="${arcDir==='up'?'on':''}"><span class="ico">↗</span>Build up</button>
+      <button data-dir="hold" class="${arcDir==='hold'?'on':''}"><span class="ico">→</span>Hold</button>
+      <button data-dir="down" class="${arcDir==='down'?'on':''}"><span class="ico">↘</span>Wind down</button>
+    </div>
+
+    <div class="sectlabel"><span>Your set · <b>${chain.length} ${chain.length===1?'track':'tracks'}</b></span><div class="setbtns"><button class="reset save" id="saveBtn">Save</button><button class="reset" id="resetBtn">Reset</button></div></div>
+    <div class="chain">${chainHtml}</div>
+
+    <div class="sectlabel" style="margin-top:20px;">Plays well next <b>from ${last.key} · ${last.bpm} · E${last.en}</b></div>
+    <div class="sugg">${suggHtml || '<div class="empty">No more tracks left.</div>'}</div>`;
+
+  view.querySelectorAll('[data-add]').forEach(el=>
+    el.onclick=()=>{ chain.push(+el.dataset.add); render();
+      window.scrollTo({top:0,behavior:'smooth'}); });
+  const rm=view.querySelector('[data-rm]');
+  if(rm) rm.onclick=(e)=>{ e.stopPropagation(); chain.pop(); render(); };
+  view.querySelectorAll('#arc button').forEach(el=>
+    el.onclick=()=>{ arcDir=el.dataset.dir; render(); });
+  const rs=view.querySelector('#resetBtn');
+  if(rs) rs.onclick=()=>{ chain=[]; arcDir="up"; render(); window.scrollTo({top:0,behavior:'smooth'}); };
+  const sv=view.querySelector('#saveBtn');
+  if(sv) sv.onclick=()=>{ addToHistory(); sv.textContent='Saved ✓'; renderTabs();
+    setTimeout(()=>{ const b=view.querySelector('#saveBtn'); if(b) b.textContent='Save'; },1400); };
+  refreshPlay();
+}
+
+render();
+</script>
+</body>
+</html>
