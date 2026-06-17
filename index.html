@@ -687,8 +687,8 @@ render();
 
 /* ---------- Auto-load tracks.json from server (when hosted) ---------- */
 (function autoLoadLibrary(){
-  // Cache-buster so an updated library shows up immediately
-  fetch('tracks.json?v=' + Date.now())
+  // Cache-buster + no-store so an updated library always shows up (iOS caches hard)
+  fetch('tracks.json?v=' + Date.now(), {cache:'no-store'})
     .then(r => r.ok ? r.json() : Promise.reject())
     .then(data => {
       if(Array.isArray(data) && data.length > 0){
