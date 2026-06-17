@@ -333,10 +333,7 @@ let timerMin = "60";
 const DEFAULT_MIX = 150; // assumed seconds/song for history length estimates
 
 /* mashup state */
-let mashupSeed = "";        // filter vocals by name/artist
-let mashupHouseOnly = true; // restrict to house genres
 let mashupList = [];        // current suggestions
-let mashupNonce = 0;        // bump to reshuffle
 
 let history = [];
 try{ history = JSON.parse(localStorage.getItem('sb-history') || '[]'); }catch(e){ history = []; }
@@ -780,9 +777,6 @@ function renderBuilder(){
 }
 
 /* ---------- Mashup Lab ---------- */
-const MASHUP_HOUSE = new Set(["House","Afro House","Tech House","Deep House",
-  "Afro Tech","Deep Tech","Melodic House","Organic House","Latin House"]);
-
 function mashupRelation(a,b){
   const f=parseKey(a), t=parseKey(b);
   if(!f.l||!t.l||isNaN(f.n)||isNaN(t.n)) return null;
@@ -795,12 +789,9 @@ function mashupStars(w,delta){ let s=Math.floor(w); if(delta<=1) s+=1; return Ma
 function shuffled(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 
 function buildMashups(){
-  const valid = t => t.bpm>0 && !isNaN(parseKey(t.key).n) && parseKey(t.key).l
-                     && (!mashupHouseOnly || MASHUP_HOUSE.has(t.g));
-  const seed = mashupSeed.trim().toLowerCase();
-  let vocals = TRACKS.filter(t=>t.v==="Vocal" && valid(t));
+  const valid = t => t.bpm>0 && !isNaN(parseKey(t.key).n) && parseKey(t.key).l;
+  const vocals = TRACKS.filter(t=>t.v==="Vocal" && valid(t));
   const instr = TRACKS.filter(t=>(t.v==="Instrumental"||t.v==="Percussive") && valid(t));
-  if(seed) vocals = vocals.filter(t=> (t.t+' '+t.a).toLowerCase().includes(seed));
   if(!vocals.length || !instr.length){ mashupList=[]; return; }
 
   const batch=[];
@@ -855,17 +846,11 @@ function renderMashup(){
     <div class="sectlabel"><span>Mashup Lab</span></div>
     <p class="mintro">A vocal layered over an instrumental/percussive track — matched by key &amp; BPM. Ideas for your own edits.</p>
     <div class="mctl">
-      <input class="search msearch" id="mSeed" placeholder="Filter by a vocal…" value="${esc(mashupSeed)}">
-      <label class="mchk" id="mHouse"><span class="box ${mashupHouseOnly?'on':''}">${mashupHouseOnly?'✓':''}</span> House only</label>
       <button class="mnew" id="mNew">⤜ New ideas</button>
     </div>
     ${mashupList.length ? `<div class="mlist">${cards}</div>`
-      : `<div class="empty">No matching pairs found.<br>Turn off <b>House only</b> or clear the filter.</div>`}`;
+      : `<div class="empty">No matching pairs found.</div>`}`;
 
-  const seedEl=document.getElementById('mSeed');
-  seedEl.oninput=(e)=>{ mashupSeed=e.target.value; const pos=e.target.selectionStart; renderMashup();
-    const ns=document.getElementById('mSeed'); ns.focus(); ns.setSelectionRange(pos,pos); };
-  document.getElementById('mHouse').onclick=()=>{ mashupHouseOnly=!mashupHouseOnly; renderMashup(); };
   document.getElementById('mNew').onclick=()=>{ renderMashup(); window.scrollTo({top:0,behavior:'smooth'}); };
   view.querySelectorAll('.mshare').forEach(el=>el.onclick=(e)=>{
     e.stopPropagation();
