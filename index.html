@@ -684,6 +684,24 @@ function renderBuilder(){
 }
 
 render();
+
+/* ---------- Auto-load tracks.json from server (when hosted) ---------- */
+(function autoLoadLibrary(){
+  // Cache-buster so an updated library shows up immediately
+  fetch('tracks.json?v=' + Date.now())
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(data => {
+      if(Array.isArray(data) && data.length > 0){
+        TRACKS = data;
+        librarySource = 'imported';
+        try{ localStorage.setItem('sb-library', JSON.stringify(data)); }catch(e){}
+        updateLibBadge();
+        if(chain.length){ const ids=new Set(TRACKS.map(t=>t.id)); chain=chain.filter(id=>ids.has(id)); }
+        render();
+      }
+    })
+    .catch(()=>{ /* offline / local file → keep localStorage or demo */ });
+})();
 </script>
 </body>
 </html>
