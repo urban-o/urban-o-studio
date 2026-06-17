@@ -465,21 +465,43 @@ const LOGO_SPOTIFY=`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill
 const LOGO_YOUTUBE=`<svg viewBox="0 0 24 24"><rect x="1" y="5" width="22" height="14" rx="4.5" fill="#FF0000"/><path d="M10 8.6l6 3.4-6 3.4z" fill="#fff"/></svg>`;
 const LOGO_SOUNDCLOUD=`<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#FF5500"/><g fill="#fff"><rect x="6" y="11" width="1.6" height="6" rx=".8"/><rect x="9" y="9" width="1.6" height="8" rx=".8"/><rect x="12" y="10" width="1.6" height="7" rx=".8"/><rect x="15" y="8" width="1.6" height="9" rx=".8"/><rect x="18" y="11" width="1.6" height="6" rx=".8"/></g></svg>`;
 const LOGO_BEATPORT=`<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#0f0f0f"/><g fill="#a3ff12"><rect x="6" y="9" width="1.7" height="9" rx=".8"/><rect x="9.2" y="6" width="1.7" height="12" rx=".8"/><rect x="12.4" y="10" width="1.7" height="8" rx=".8"/><rect x="15.6" y="7.5" width="1.7" height="10.5" rx=".8"/></g></svg>`;
+/* app = URL-Scheme (öffnet die App direkt mit Suche) · web = Browser-Fallback */
 const SVC = [
-  {n:'Beatport',   ic:LOGO_BEATPORT,   u:q=>'https://www.beatport.com/search?q='+q},
-  {n:'Spotify',    ic:LOGO_SPOTIFY,    u:q=>'https://open.spotify.com/search/'+q},
-  {n:'SoundCloud', ic:LOGO_SOUNDCLOUD, u:q=>'https://soundcloud.com/search?q='+q},
-  {n:'YouTube',    ic:LOGO_YOUTUBE,    u:q=>'https://www.youtube.com/results?search_query='+q},
+  {n:'Beatport',   ic:LOGO_BEATPORT,   app:q=>'beatport://search?q='+q,             web:q=>'https://www.beatport.com/search?q='+q},
+  {n:'Spotify',    ic:LOGO_SPOTIFY,    app:q=>'spotify:search:'+q,                  web:q=>'https://open.spotify.com/search/'+q},
+  {n:'SoundCloud', ic:LOGO_SOUNDCLOUD, app:q=>'soundcloud://search?q='+q,           web:q=>'https://soundcloud.com/search?q='+q},
+  {n:'YouTube',    ic:LOGO_YOUTUBE,    app:q=>'youtube://results?search_query='+q,  web:q=>'https://www.youtube.com/results?search_query='+q},
 ];
 const svcSheet=document.getElementById('svcSheet');
 const svcCard=document.getElementById('svcCard');
+
+/* App-Scheme versuchen; öffnet die App nicht (nicht installiert), nach kurzer Zeit Browser. */
+function openInApp(appUrl, webUrl){
+  if(!appUrl){ window.open(webUrl,'_blank'); return; }
+  let switched=false;
+  const onHide=()=>{ switched=true; };
+  document.addEventListener('visibilitychange', onHide, {once:true});
+  const t=setTimeout(()=>{
+    document.removeEventListener('visibilitychange', onHide);
+    if(!switched && !document.hidden){ window.open(webUrl,'_blank'); }
+  }, 1200);
+  try{ window.location.href = appUrl; }
+  catch(e){ clearTimeout(t); window.open(webUrl,'_blank'); }
+}
+
 function openServices(q){
-  const links=SVC.map(s=>`<a href="${s.u(q)}" target="_blank" rel="noopener"><span class="ic">${s.ic}</span>${s.n}</a>`).join('');
+  const links=SVC.map((s,i)=>`<a href="#" data-i="${i}"><span class="ic">${s.ic}</span>${s.n}</a>`).join('');
   svcCard.innerHTML=`<div class="sheet-ttl">Open in</div>
     <div class="sheet-sub">${esc(decodeURIComponent(q))}</div>${links}
     <button class="close" id="svcClose">Close</button>`;
   svcSheet.classList.add('on');
   document.getElementById('svcClose').onclick=()=>svcSheet.classList.remove('on');
+  svcCard.querySelectorAll('[data-i]').forEach(el=>el.onclick=(e)=>{
+    e.preventDefault();
+    const s=SVC[+el.dataset.i];
+    svcSheet.classList.remove('on');
+    openInApp(s.app(q), s.web(q));
+  });
 }
 svcSheet.addEventListener('click',(e)=>{ if(e.target===svcSheet) svcSheet.classList.remove('on'); });
 document.addEventListener('click',(e)=>{
