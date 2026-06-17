@@ -196,6 +196,37 @@
   .t-refrow{display:flex; justify-content:space-between; padding:7px 2px; border-bottom:1px solid var(--line); font-size:12px;}
   .t-refrow:last-child{border-bottom:0;}
   .t-refrow b{color:var(--muted); font-weight:600; font-variant-numeric:tabular-nums;}
+
+  /* ---- Mashup Lab ---- */
+  .mintro{font-size:11.5px; color:var(--muted); margin:0 4px 12px; line-height:1.4;}
+  .mctl{display:flex; flex-wrap:wrap; align-items:center; gap:9px; margin-bottom:14px;}
+  .msearch{flex:1; min-width:150px;}
+  .mchk{display:flex; align-items:center; gap:7px; font-size:12px; color:var(--muted); font-weight:600;}
+  .mchk .box{width:19px; height:19px; border-radius:6px; border:1px solid var(--line);
+    background:var(--card); display:flex; align-items:center; justify-content:center;
+    font-size:12px; color:var(--black);}
+  .mchk .box.on{background:var(--amber); border-color:var(--amber);}
+  .mnew{background:var(--amber); color:var(--black); border:0; font-family:var(--font);
+    font-size:11.5px; font-weight:700; letter-spacing:.5px; padding:10px 14px; border-radius:11px;
+    text-transform:uppercase; box-shadow:0 4px 14px rgba(246,159,20,.35);}
+  .mlist{display:flex; flex-direction:column; gap:11px;}
+  .mcard{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;}
+  .mrow{display:flex; align-items:center; gap:10px; padding:11px 13px;}
+  .mrole{flex:none; width:50px; text-align:center; font-size:8.5px; font-weight:700; letter-spacing:.5px;
+    color:var(--black); padding:4px 0; border-radius:5px;}
+  .mrole.voc{background:var(--amber);} .mrole.ins{background:var(--lime);}
+  .minfo{flex:1; min-width:0;}
+  .mname{font-size:12.5px; font-weight:600; color:var(--txt); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .mart{font-size:10.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px;}
+  .mkey{flex:none; font-size:12px; font-weight:700; color:var(--t-amber); width:34px; text-align:right;}
+  .mbpm{flex:none; font-size:12px; color:var(--muted); width:34px; text-align:right; font-variant-numeric:tabular-nums;}
+  .mplus{text-align:center; font-size:13px; font-weight:700; color:var(--dim); line-height:0; padding:1px 0;}
+  .mfoot{display:flex; align-items:center; gap:7px; padding:9px 13px; background:var(--card2); border-top:1px solid var(--line);}
+  .mbadge{font-size:10px; font-weight:600; color:var(--t-amber); background:rgba(246,159,20,.13);
+    padding:3px 8px; border-radius:5px;}
+  .mbadge.dim{color:var(--muted); background:var(--card);}
+  .mstars{margin-left:auto; display:flex; gap:1px;}
+  .mstar{font-size:11px; color:var(--line);} .mstar.on{color:var(--gold);}
 </style>
 </head>
 <body>
@@ -260,13 +291,19 @@ let librarySource = 'demo'; // 'demo' | 'imported'
 let chain = [];          // track ids in order
 let arcDir = "up";       // up | hold | down
 
-/* ---------- App state: tabs, history, timer ---------- */
-let activeTab = "build"; // build | history | timer
+/* ---------- App state: tabs, history, timer, mashup ---------- */
+let activeTab = "build"; // build | mashup | history | timer
 let openHist = null;     // expanded history set id
 let mixSeconds = 150;    // timer: mix time per song (default 2:30)
 let timerSong = "10";
 let timerMin = "60";
 const DEFAULT_MIX = 150; // assumed seconds/song for history length estimates
+
+/* mashup state */
+let mashupSeed = "";        // filter vocals by name/artist
+let mashupHouseOnly = true; // restrict to house genres
+let mashupList = [];        // current suggestions
+let mashupNonce = 0;        // bump to reshuffle
 
 let history = [];
 try{ history = JSON.parse(localStorage.getItem('sb-history') || '[]'); }catch(e){ history = []; }
@@ -474,13 +511,14 @@ function render(){
   renderTabs();
   if(activeTab==='history'){ hint.innerHTML=''; renderHistory(); return; }
   if(activeTab==='timer'){ hint.innerHTML=''; renderTimer(); return; }
+  if(activeTab==='mashup'){ hint.innerHTML=''; renderMashup(); return; }
   if(chain.length===0){ renderPicker(); return; }
   renderBuilder();
 }
 
 /* ---------- Tab bar ---------- */
 function renderTabs(){
-  const tabs=[['build','Build'],['history','History'],['timer','Timer']];
+  const tabs=[['build','Build'],['mashup','Mashup'],['history','History'],['timer','Timer']];
   tabbar.innerHTML = tabs.map(([k,label])=>{
     const badge = (k==='history' && history.length) ? `<span class="tbadge">${history.length}</span>` : '';
     return `<button class="tab ${activeTab===k?'on':''}" data-tab="${k}">${label}${badge}</button>`;
@@ -680,6 +718,93 @@ function renderBuilder(){
   const sv=view.querySelector('#saveBtn');
   if(sv) sv.onclick=()=>{ addToHistory(); sv.textContent='Saved ✓'; renderTabs();
     setTimeout(()=>{ const b=view.querySelector('#saveBtn'); if(b) b.textContent='Save'; },1400); };
+  refreshPlay();
+}
+
+/* ---------- Mashup Lab ---------- */
+const MASHUP_HOUSE = new Set(["House","Afro House","Tech House","Deep House",
+  "Afro Tech","Deep Tech","Melodic House","Organic House","Latin House"]);
+
+function mashupRelation(a,b){
+  const f=parseKey(a), t=parseKey(b);
+  if(!f.l||!t.l||isNaN(f.n)||isNaN(t.n)) return null;
+  if(f.n===t.n && f.l===t.l) return {label:"Same key", w:3.0};
+  if(f.n===t.n && f.l!==t.l) return {label:"Relative maj/min", w:2.5}; // 8A ↔ 8B
+  if(f.l===t.l && wheelDist(f.n,t.n)===1) return {label:"Adjacent ±1", w:2.0};
+  return null;
+}
+function mashupStars(w,delta){ let s=Math.floor(w); if(delta<=1) s+=1; return Math.min(Math.max(s,1),4); }
+function shuffled(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function buildMashups(){
+  const valid = t => t.bpm>0 && !isNaN(parseKey(t.key).n) && parseKey(t.key).l
+                     && (!mashupHouseOnly || MASHUP_HOUSE.has(t.g));
+  const seed = mashupSeed.trim().toLowerCase();
+  let vocals = TRACKS.filter(t=>t.v==="Vocal" && valid(t));
+  const instr = TRACKS.filter(t=>(t.v==="Instrumental"||t.v==="Percussive") && valid(t));
+  if(seed) vocals = vocals.filter(t=> (t.t+' '+t.a).toLowerCase().includes(seed));
+  if(!vocals.length || !instr.length){ mashupList=[]; return; }
+
+  const batch=[];
+  for(const v of shuffled(vocals)){
+    const partners=[];
+    for(const inst of instr){
+      if(inst.id===v.id) continue;
+      const rel=mashupRelation(v.key, inst.key);
+      if(!rel) continue;
+      const delta=Math.abs(v.bpm-inst.bpm);
+      if(delta>6) continue;
+      partners.push({v, inst, rel:rel.label, w:rel.w, delta, score:rel.w*10-delta});
+    }
+    if(!partners.length) continue;
+    partners.sort((a,b)=>b.score-a.score);
+    batch.push(...partners.slice(0,2));
+    if(batch.length>=24) break;
+  }
+  mashupList = batch.slice(0,24);
+}
+
+function mashTrackRow(role, t, cls){
+  return `<div class="mrow">
+    <span class="mrole ${cls}">${role}</span>
+    <div class="minfo"><div class="mname">${esc(t.t)}</div><div class="mart">${esc(t.a)}</div></div>
+    <span class="mkey">${t.key}</span><span class="mbpm">${t.bpm}</span>
+    ${playBtn(t)}</div>`;
+}
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderMashup(){
+  buildMashups();
+  const cards = mashupList.map(m=>{
+    const stars = mashupStars(m.w, m.delta);
+    const starHtml = [0,1,2,3].map(i=>`<span class="mstar ${i<stars?'on':''}">★</span>`).join('');
+    return `<div class="mcard">
+      ${mashTrackRow('VOCAL', m.v, 'voc')}
+      <div class="mplus">+</div>
+      ${mashTrackRow('INSTR', m.inst, 'ins')}
+      <div class="mfoot">
+        <span class="mbadge">${m.rel}</span>
+        <span class="mbadge dim">Δ${m.delta} BPM</span>
+        <span class="mstars">${starHtml}</span>
+      </div></div>`;
+  }).join('');
+
+  view.innerHTML = `
+    <div class="sectlabel"><span>Mashup Lab</span></div>
+    <p class="mintro">Vocal über Instrumental/Percussive — gepaart nach Key &amp; BPM. Ideen für eigene Edits.</p>
+    <div class="mctl">
+      <input class="search msearch" id="mSeed" placeholder="Nach einem Vocal filtern…" value="${esc(mashupSeed)}">
+      <label class="mchk" id="mHouse"><span class="box ${mashupHouseOnly?'on':''}">${mashupHouseOnly?'✓':''}</span> House only</label>
+      <button class="mnew" id="mNew">⤜ Neue Ideen</button>
+    </div>
+    ${mashupList.length ? `<div class="mlist">${cards}</div>`
+      : `<div class="empty">Keine passenden Paare gefunden.<br>Schalte <b>House only</b> aus oder leere den Filter.</div>`}`;
+
+  const seedEl=document.getElementById('mSeed');
+  seedEl.oninput=(e)=>{ mashupSeed=e.target.value; const pos=e.target.selectionStart; renderMashup();
+    const ns=document.getElementById('mSeed'); ns.focus(); ns.setSelectionRange(pos,pos); };
+  document.getElementById('mHouse').onclick=()=>{ mashupHouseOnly=!mashupHouseOnly; renderMashup(); };
+  document.getElementById('mNew').onclick=()=>{ renderMashup(); window.scrollTo({top:0,behavior:'smooth'}); };
   refreshPlay();
 }
 
