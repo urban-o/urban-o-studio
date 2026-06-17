@@ -461,7 +461,7 @@ function enTag(t){ return t.ew ? `<span class="tag en">${t.ew}</span>` : ''; }
 /* ---------- Open track in music services (Spotify / Apple / YouTube / SoundCloud) ---------- */
 function svcBtn(t){
   const q=encodeURIComponent(t.t+' '+t.a);
-  return `<button class="svc" data-q="${q}" aria-label="In Musikdienst öffnen">↗</button>`;
+  return `<button class="svc" data-q="${q}" aria-label="Open in music service">↗</button>`;
 }
 const SVC = [
   {n:'Spotify',     ic:'🟢', u:q=>'https://open.spotify.com/search/'+q},
@@ -473,9 +473,9 @@ const svcSheet=document.getElementById('svcSheet');
 const svcCard=document.getElementById('svcCard');
 function openServices(q){
   const links=SVC.map(s=>`<a href="${s.u(q)}" target="_blank" rel="noopener"><span class="ic">${s.ic}</span>${s.n}</a>`).join('');
-  svcCard.innerHTML=`<div class="sheet-ttl">In Dienst öffnen</div>
+  svcCard.innerHTML=`<div class="sheet-ttl">Open in</div>
     <div class="sheet-sub">${esc(decodeURIComponent(q))}</div>${links}
-    <button class="close" id="svcClose">Schließen</button>`;
+    <button class="close" id="svcClose">Close</button>`;
   svcSheet.classList.add('on');
   document.getElementById('svcClose').onclick=()=>svcSheet.classList.remove('on');
 }
@@ -838,7 +838,7 @@ function renderMashup(){
     const stars = mashupStars(m.w, m.delta);
     const starHtml = [0,1,2,3].map(i=>`<span class="mstar ${i<stars?'on':''}">★</span>`).join('');
     const share = encodeURIComponent(
-      `🎚️ Mashup-Idee\n${m.v.t} – ${m.v.a} (${m.v.key}/${m.v.bpm})\n+ ${m.inst.t} – ${m.inst.a} (${m.inst.key}/${m.inst.bpm})\n${m.rel} · Δ${m.delta} BPM`);
+      `🎚️ Mashup idea\n${m.v.t} – ${m.v.a} (${m.v.key}/${m.v.bpm})\n+ ${m.inst.t} – ${m.inst.a} (${m.inst.key}/${m.inst.bpm})\n${m.rel} · Δ${m.delta} BPM`);
     return `<div class="mcard">
       ${mashTrackRow('VOCAL', m.v, 'voc')}
       <div class="mplus">+</div>
@@ -846,21 +846,21 @@ function renderMashup(){
       <div class="mfoot">
         <span class="mbadge">${m.rel}</span>
         <span class="mbadge dim">Δ${m.delta} BPM</span>
-        <button class="mshare" data-share="${share}">⇪ Teilen</button>
+        <button class="mshare" data-share="${share}">⇪ Share</button>
         <span class="mstars">${starHtml}</span>
       </div></div>`;
   }).join('');
 
   view.innerHTML = `
     <div class="sectlabel"><span>Mashup Lab</span></div>
-    <p class="mintro">Vocal über Instrumental/Percussive — gepaart nach Key &amp; BPM. Ideen für eigene Edits.</p>
+    <p class="mintro">A vocal layered over an instrumental/percussive track — matched by key &amp; BPM. Ideas for your own edits.</p>
     <div class="mctl">
-      <input class="search msearch" id="mSeed" placeholder="Nach einem Vocal filtern…" value="${esc(mashupSeed)}">
+      <input class="search msearch" id="mSeed" placeholder="Filter by a vocal…" value="${esc(mashupSeed)}">
       <label class="mchk" id="mHouse"><span class="box ${mashupHouseOnly?'on':''}">${mashupHouseOnly?'✓':''}</span> House only</label>
-      <button class="mnew" id="mNew">⤜ Neue Ideen</button>
+      <button class="mnew" id="mNew">⤜ New ideas</button>
     </div>
     ${mashupList.length ? `<div class="mlist">${cards}</div>`
-      : `<div class="empty">Keine passenden Paare gefunden.<br>Schalte <b>House only</b> aus oder leere den Filter.</div>`}`;
+      : `<div class="empty">No matching pairs found.<br>Turn off <b>House only</b> or clear the filter.</div>`}`;
 
   const seedEl=document.getElementById('mSeed');
   seedEl.oninput=(e)=>{ mashupSeed=e.target.value; const pos=e.target.selectionStart; renderMashup();
@@ -871,7 +871,7 @@ function renderMashup(){
     e.stopPropagation();
     const txt=decodeURIComponent(el.dataset.share);
     if(navigator.share){ navigator.share({text:txt}).catch(()=>{}); }
-    else if(navigator.clipboard){ navigator.clipboard.writeText(txt); el.textContent='✓ Kopiert'; setTimeout(()=>{el.textContent='⇪ Teilen';},1500); }
+    else if(navigator.clipboard){ navigator.clipboard.writeText(txt); el.textContent='✓ Copied'; setTimeout(()=>{el.textContent='⇪ Share';},1500); }
   });
   refreshPlay();
 }
