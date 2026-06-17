@@ -38,9 +38,10 @@
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0; background:var(--bg); color:var(--txt);
-    font-family:var(--font); -webkit-font-smoothing:antialiased;}
+    font-family:var(--font); -webkit-font-smoothing:antialiased;
+    overflow-x:hidden; max-width:100%;}
   body{min-height:100dvh; padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);}
-  .app{max-width:520px; margin:0 auto; padding:16px 14px 120px;}
+  .app{max-width:520px; margin:0 auto; padding:16px 14px 120px; width:100%; overflow-x:hidden;}
   body,.ctrack,.scard,.pick,.search,.arc,.themetoggle,.reset,.tag,.why .reason,.step{transition:background-color .22s ease,color .22s ease,border-color .22s ease;}
 
   /* ---- Header / Logo ---- */
@@ -141,9 +142,9 @@
     position:relative; display:flex; align-items:center; gap:6px; cursor:pointer;}
   .tab.on{color:var(--t-amber);}
   .tab.on::after{content:""; position:absolute; left:8px; right:8px; bottom:-1px; height:2px;
-    background:var(--amber); border-radius:2px;}
+    background:var(--t-amber); border-radius:2px;}
   .tbadge{font-size:9px; font-weight:700; min-width:16px; text-align:center; color:var(--black);
-    background:var(--amber); border-radius:8px; padding:1px 5px; letter-spacing:0;}
+    background:var(--t-amber); border-radius:8px; padding:1px 5px; letter-spacing:0;}
 
   /* ---- Save / Reset row buttons ---- */
   .setbtns{display:flex; gap:6px;}
@@ -156,6 +157,34 @@
     transition:background-color .2s ease, color .2s ease;}
   .play.playing{background:var(--amber); color:var(--black); border-color:var(--amber);}
   .play.loading{color:var(--muted);}
+
+  /* ---- Service link button (opens Spotify/Apple/YouTube/SoundCloud) ---- */
+  .svc{flex:none; width:30px; height:30px; border-radius:50%; border:1px solid var(--line);
+    background:var(--card2); color:var(--muted); font-size:13px; line-height:1; padding:0;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;}
+
+  /* ---- Service sheet (bottom popup) ---- */
+  .sheet{position:fixed; inset:0; z-index:50; display:flex; align-items:flex-end;
+    background:rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:opacity .2s ease;}
+  .sheet.on{opacity:1; pointer-events:auto;}
+  .sheet-card{width:100%; max-width:520px; margin:0 auto; background:var(--card);
+    border-radius:20px 20px 0 0; border:1px solid var(--line); border-bottom:0;
+    padding:16px 16px calc(20px + env(safe-area-inset-bottom)); transform:translateY(100%);
+    transition:transform .25s ease;}
+  .sheet.on .sheet-card{transform:translateY(0);}
+  .sheet-ttl{font-size:13px; font-weight:700; color:var(--txt); margin:0 2px 3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .sheet-sub{font-size:11px; color:var(--muted); margin:0 2px 14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .sheet a{display:flex; align-items:center; gap:11px; padding:13px 12px; border-radius:12px;
+    background:var(--card2); color:var(--txt); text-decoration:none; font-size:14px; font-weight:600;
+    margin-bottom:8px;}
+  .sheet a .ic{width:22px; text-align:center; font-size:16px;}
+  .sheet .close{width:100%; padding:13px; border:0; border-radius:12px; background:transparent;
+    color:var(--muted); font-family:var(--font); font-size:13px; font-weight:600; margin-top:4px;}
+
+  /* ---- Mashup share button ---- */
+  .mshare{margin-left:auto; background:transparent; border:1px solid var(--line); color:var(--muted);
+    font-family:var(--font); font-size:11px; font-weight:600; padding:5px 11px; border-radius:9px;}
+  .mstars{margin-left:0;}
 
   /* ---- History ---- */
   .histlist{display:flex; flex-direction:column; gap:9px;}
@@ -233,14 +262,12 @@
 </head>
 <body>
 <div class="app">
-  <input type="file" id="libInput" accept=".json" style="display:none">
   <header>
     <div class="brand">
       <div class="appname">Studio <span class="demo" id="libBadge">DEMO</span></div>
       <div class="tagline">Portable Edition</div>
     </div>
     <div class="hdr-right">
-      <button class="themetoggle" id="importBtn" aria-label="Import library" title="Import Library from Mac" style="font-size:18px;">📥</button>
       <button class="themetoggle" id="themeBtn" aria-label="Toggle theme">☀️</button>
       <div class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1306.83 494.82" aria-label="URBAN O"><g fill="currentColor"><path d="M271.52,336.6c4.96-1.59,7.52-1.79,12.88-2.21,30.53-2.48,65.18,13.67,75.6,39.06,18.41,44.07,58.5,119.25,79.47,121.38,3.05.17,7.26-3.31,11.84-9.77,5.68-8.01,9.62-17.9,11.4-28.47,2.25-13.21,2.71-15.93,4.89-28.73.93-5.44,2.96-21.17,2.59-26.5-2.13-30.24-6.58-57.78-22.98-69.21-4.23-2.95-9.37-4.26-14.52-4.09-3.53.12-7.42.42-11.45.75-14.08,1.11-30.09,2.35-39.75-3.04-11.07-6.23-24.33-24.3-24.4-37.41-.1-16.12,11.43-26.01,22.43-35.64,3.89-3.41,7.52-6.61,10.67-10.05,18.61-20.42,47.27-58.03,67.11-96.31,26.33-51.19,22.26-71.71,14.98-80.11-5.71-6.45-25.12-9.73-35.24-5.96-53.11,19.74-82.64,48.99-107.24,72.4-17.88,17.09-32.43,30.57-50.22,34.55-11.94,2.69-20.09,6.8-24.94,12.58-7.83,9.3-6.64,22.32-5.39,37.66,1.23,15.05,2.56,32.42-4.63,50.54-8.8,22.06-17.95,44.4-27.34,67.02-10.36,28.83-21.08,58.22-31.85,88.21-1.81,5-.53,16.39,3.47,22.19.9,1.26,2.33,2.81,4.09,2.89,19.15.88,26.92-18.3,37.55-44.15,8.05-19.72,17.92-43.56,35.55-63.98,1.38-1.59,3.17-2.78,5.15-3.5l.27-.1ZM322.39,257.42c-4.05,4.08-14.03,8.87-20.24,9.51-.99.1-1.87.1-2.63-.03-5.62-.93-10.36-7.35-13.05-17.41-5.83-22.08.4-42.59,9.46-51.95,14.77-15.17,35.73-20.44,52.38-23.23,9.94-1.69,19.54-5.23,28.5-10.6,7.35-4.4,14.67-8.79,21.96-13.17,1.56-.96,3.44-1.12,5.04-.45,1.58.65,2.58,2.04,2.69,3.67,1.1,16.61-10.1,28.15-21.09,39.25-1.65,1.68-3.31,3.34-4.91,5.01-18.88,19.69-38.24,39.5-58.11,59.4Z"/><path d="M919.91,127.7c3.94,2.93,7.27,6.65,9.53,11.01,1.28,2.48,2.02,4.66,1.96,6.1-.68,15.33-7.09,28.16-14.24,41.12-.75,1.36-1.5,2.72-2.26,4.08-1.32,2.45-1.19,5.74.43,8.65,1.51,2.75,4.61,4.17,7.08,3.22,2-.77,6.81-2.8,8.29-5.15,15.48-24.43,28.54-33.45,43.83-57.22,6.3-9.83,12.18-18.17,19.57-24.07,7.37-5.89,16.25-9.3,28.56-9.19,5.17.02,10.18,3.47,14.11,9.62,9.75,15.37,14.9,31.86-2.58,64.83-19.83,37.09-22.8,78.45-6.87,128.11,8.57,26.53,9.97,47.27,3.32,57.72-3.37,5.34-8.85,7.91-16.2,7.61-.11,0-.21-.01-.32-.01-7.55-.38-14.12-3.39-20.06-9.16-21.67-21.31-28.82-73.56-33.87-113.28-.79-6.09-2.81-12.38-6.18-19.25-1.57-3.24-4.45-5.61-7.68-6.36-3.17-.75-6,.26-7.56,2.68-8.14,12.54-12.83,25.15-18.26,39.96-10.6,28.87-21.38,58.59-32.47,89.5-6.36,17.72-26.95,26.62-44.64,18.94-4.77-2.06-7.92-7.61-7.15-12.61,2.8-18.33,9.31-33.65,15.49-48.28,12.03-28.29,21.82-52.07-4.09-78.48-8.69-8.93-5.52-28.4-2.37-34.35,7-13.24,12.86-19.02,19.61-25.73,8.72-8.65,18.53-18.48,33.71-45.84,1.04-1.86,3.44-3.82,6.21-5.37,4.7-2.64,10.54-2.21,14.87,1.01l.24.18Z"/><path d="M536.51,141.95c6.01-30.06,11.67-59.57,17.03-88.96,1.72-9.36,5.35-40.93-17.61-52.03-4-1.95-9.06-.84-12.31,2.63-20.38,21.81-23.76,58.44-24.43,73.35-2.07,53.76-22.02,123.53-60.44,153.38-11.17,8.67-23.38,23.81-25.23,38.43-1.01,8.03,1.22,15.09,6.7,20.96,10.75,11.53,41.63-2.51,54.69-12.25,1.1-.84,1.54-.31,1.8.59,6.56,27.06,28.1,38.32,45.08,42.68,25.12,6.54,53.48,1.29,61.79-7.95,17.05-18.92,30.83-37.85,41.23-56.22.48-.93,1.08-.91,1.78-.2,18.43,18.23,73.58,41.61,111.79,8.93,5.67-4.86,9.92-6.43,13.39-4.98,5.2,2.17,7.1,10.49,9.37,20.29,3.07,13.32,6.64,28.79,19.27,30.41,6.58.82,24.61-6.65,24.62-14.07,2.87-19.16,5.7-37.92,8.53-56.35,1.18-7.65,1.91-15.47,2.51-22.17.96-10.55,5.56-23.47,13.97-39.37,3.02-5.73,3.68-13.77,2.67-22.57-2.13-18.38-10.86-35.65-24.23-44.35-13.79-8.99-25.96-9.05-35.07-8.14-5.51.55-10.91,1.6-16.2,3.01-12.51,3.33-33.98,10.66-39.01,22.1-13.71,31.22-21.19,37.62-50.74,52.32-3.96,1.98-11.11,6.3-18.36,13.36-1.17,1.07-2.26,1.92-1.9-1.03,2.57-19.53.57-38.02-5.8-55.03-1.92-5.17-6.03-9.48-11.21-11.88-29.94-13.68-58.39-.14-92.01,15.54-1.22.66-1.98.75-1.69-.44ZM600.09,210.31c-3.2,4.75-7.61,12.17-10.2,16.74-5.75,10.16-4.76,17.34-8.2,26.46-3.35,8.91-22.2,18.85-31.19,21.88t0,0c-7.15,2.42-15.02.73-20.61-4.31-19.32-17.46-18.99-39.96-8.09-69.9,5.43-14.95,16.08-27.05,31.58-36.14,9.89-5.78,27.47-7.16,38.29,2.46,18.42,14.39,18.37,28.63,8.42,42.8ZM705.82,255.49c-3.17-.02-7.58-2.5-11.99-6.74-4.21-4.05-9.04-10.46-8.86-15.25.63-16.91,19.1-29.6,32.42-38.84.83-.57,1.66-1.15,2.49-1.72,4.16-2.92,8.11-6.04,11.88-9.03,14.26-11.31,27.55-21.95,49.34-17.93,1.77.33,3.39,1.41,4.43,3,1.08,1.61,1.45,3.52,1.03,5.25-3.52,14.16-7.06,28.47-10.63,42.96-1.33,5.4-4.69,9.77-9.46,12.31-11.45,6.08-22.96,12.22-34.56,18.41-8.35,5.1-17.03,7.8-26.1,7.59Z"/><path d="M87.1,266.05c3.8,4.41,10.38,6.49,18.56,5.79.86-.07,1.78-.17,2.82-.34.03,0,.05,0,.07,0,11.56-1.87,23.83-8.65,29.13-16.15,22.33-31.59,35.7-44.26,47.15-78.31.88-2.62,1.89-5.2,3.25-7.6,11.4-20.14,31.55-22.97,41.02-24.07.47-.05.92-.11,1.38-.14,2.08-.16,4.02.48,5.31,1.74.88.92,1.44,3.48,1.44,3.48,0,0,.2,1.02.49,2.31,2.13,9.5,1.23,19.42-2.54,28.4-6.37,15.14-16.49,32.23-27.22,50.98-1.58,2.76-3.18,5.5-4.72,8.07-12.65,21.34-22.24,36.4-7.22,60.56,7.49,12.13,2.05,32.69-12.15,44.25-4.43,3.61-13.43,6.13-22.88,6.44-3.84.13-7.58-.12-10.85-.73-6.31-1.17-10.22-3.56-11.01-6.72-3.79-15.37-7.54-30.35-11.3-45.01-.07-.27-.61-2.34-.68-2.62-.12-.7-.56-.62-1.28.1-.83.72-2.93,2.76-3.76,3.49-30.04,26.68-76.67,48.35-103.12,49.3-4.73.2-8.56-.28-11.4-1.39-5.48-2.21-9.9-19.6-6.29-24.94,26.62-39.97,47.04-74.58,69.79-120.14,6.05-10.46,22.04-32.6,31.86-35.21,4.03-1.06,7.38-1.75,10.28-2.13,10.71-1.39,16.67,1.37,19.83,9.3,5.89,14.62.07,33.25-15.2,47.16-14.03,12.88-28.87,26.02-31.29,42.43-.11.64.07,1.21.51,1.71Z"/><path d="M1086.77,294.12c-5.53,4.8-13.44,5.47-22.75,1.87-3.17-1.21-6.17-5-8.45-10.58-3.93-9.61-4.23-20.58-.81-24.06,6.15-6.19,19.62-9.28,30.01-6.77,5.11,1.24,8.96,5.52,9.66,10.73,1.6,11.92-1.17,23.16-7.67,28.81Z"/><path d="M1096.25,220.72c-5.41,4.53-13.05,5.06-22,1.52-3.03-1.2-5.9-4.82-8.04-10.2-3.67-9.23-3.81-19.77-.44-23.08,5.1-5.03,15.28-7.88,24.33-7.11,1.33.11,2.63.3,3.89.58,5.42,1.18,9.52,5.79,10.1,11.31,1.19,11.28-1.63,21.76-7.85,26.97Z"/><path d="M1215.86,139.41c-5.05,2.24-9.67,5.38-13.58,9.28-33.67,33.66-49.74,60.84-64.2,98.84-5.19,13.51-7.41,28.97-6.5,46.02.59,11.29,1.21,22.68,1.86,34.18,1.22,22.53,19.59,47.05,42.93,56.38,23.73,9.49,48.38,6.81,63.85-6.3,42.37-36.23,76.54-108.15,63.97-168.88-4.05-20.39-12.7-37.65-25.66-51.15-4.63-4.82-12.15-10.51-20.39-15.43-.38-.23-.77-.46-1.16-.68-12.54-7.31-27.85-8.14-41.13-2.25h0ZM1258.8,232.34c4.27,23.49,2.01,44-6.13,59.46-8.14,15.48-22.16,25.9-40.74,28.81-1.04.17-2.11.24-3.19.23-5.74-.07-12.12-2.55-17.62-6.97-6.55-5.24-10.86-12.29-11.86-19.28-5.01-35.41,11.03-66.74,42.67-86.04,3.86-2.34,9.11-2.52,14.81-.52,5.69,2,11.14,5.93,15.38,11.09,3.53,4.26,5.91,8.97,6.68,13.23Z"/></g></svg></div>
     </div>
@@ -252,6 +279,8 @@
 
   <p class="hint" id="hint"></p>
 </div>
+
+<div class="sheet" id="svcSheet"><div class="sheet-card" id="svcCard"></div></div>
 
 <script>
 /* ---------------- DEMO DATA: real tracks (Deezer-verified previews) ----------------
@@ -406,10 +435,52 @@ document.addEventListener('click',(e)=>{
   playPreview(b);
 }, true);
 
+/* iOS audio unlock: first user touch primes the audio element so later
+   programmatic play() (after async lookup) is allowed without a 2nd tap. */
+let audioPrimed=false;
+function primeAudio(){
+  if(audioPrimed) return; audioPrimed=true;
+  const prev=audioEl.src;
+  audioEl.src='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+  const p=audioEl.play();
+  if(p&&p.then) p.then(()=>{ audioEl.pause(); audioEl.currentTime=0; if(prev) audioEl.src=prev; }).catch(()=>{});
+}
+document.addEventListener('touchend', primeAudio, {once:true, passive:true});
+document.addEventListener('click', primeAudio, {once:true});
+
 function playBtn(t){
   const pt=(t.t+'|||'+t.a).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
   return `<button class="play" data-pt="${pt}">▶</button>`;
 }
+
+/* ---------- Open track in music services (Spotify / Apple / YouTube / SoundCloud) ---------- */
+function svcBtn(t){
+  const q=encodeURIComponent(t.t+' '+t.a);
+  return `<button class="svc" data-q="${q}" aria-label="In Musikdienst öffnen">↗</button>`;
+}
+const SVC = [
+  {n:'Spotify',     ic:'🟢', u:q=>'https://open.spotify.com/search/'+q},
+  {n:'Apple Music', ic:'', u:q=>'https://music.apple.com/search?term='+q},
+  {n:'YouTube',     ic:'▶️', u:q=>'https://www.youtube.com/results?search_query='+q},
+  {n:'SoundCloud',  ic:'🟠', u:q=>'https://soundcloud.com/search?q='+q},
+];
+const svcSheet=document.getElementById('svcSheet');
+const svcCard=document.getElementById('svcCard');
+function openServices(q){
+  const links=SVC.map(s=>`<a href="${s.u(q)}" target="_blank" rel="noopener"><span class="ic">${s.ic}</span>${s.n}</a>`).join('');
+  svcCard.innerHTML=`<div class="sheet-ttl">In Dienst öffnen</div>
+    <div class="sheet-sub">${esc(decodeURIComponent(q))}</div>${links}
+    <button class="close" id="svcClose">Schließen</button>`;
+  svcSheet.classList.add('on');
+  document.getElementById('svcClose').onclick=()=>svcSheet.classList.remove('on');
+}
+svcSheet.addEventListener('click',(e)=>{ if(e.target===svcSheet) svcSheet.classList.remove('on'); });
+document.addEventListener('click',(e)=>{
+  const b=e.target.closest('.svc');
+  if(!b) return;
+  e.stopPropagation(); e.preventDefault();
+  openServices(b.dataset.q);
+}, true);
 
 /* ---------- Camelot harmonic logic ---------- */
 function parseKey(k){ return {n:parseInt(k), l:k.slice(-1)}; }
@@ -472,10 +543,8 @@ let savedTheme=null; try{ savedTheme=localStorage.getItem('sb-theme'); }catch(e)
 applyTheme(savedTheme || ((window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark'));
 themeBtn.onclick=()=>applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');
 
-/* ---------- Library import (tracks.json from Mac) ---------- */
+/* ---------- Library badge (track count) ---------- */
 const libBadge = document.getElementById('libBadge');
-const libInput = document.getElementById('libInput');
-
 function updateLibBadge(){
   if(libBadge){
     libBadge.textContent = librarySource==='imported' ? TRACKS.length+' TRACKS' : 'DEMO';
@@ -483,31 +552,6 @@ function updateLibBadge(){
   }
 }
 updateLibBadge();
-
-document.getElementById('importBtn').onclick = () => libInput.click();
-
-libInput.onchange = (e) => {
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    try{
-      const data = JSON.parse(ev.target.result);
-      if(!Array.isArray(data) || data.length === 0) throw new Error('empty');
-      TRACKS = data;
-      librarySource = 'imported';
-      chain = [];
-      try{ localStorage.setItem('sb-library', JSON.stringify(data)); }catch(err){}
-      updateLibBadge();
-      render();
-      alert('✅ Library imported: '+data.length+' tracks loaded.');
-    }catch(err){
-      alert('❌ Could not read tracks.json. Make sure you exported it from URBAN O Studio on your Mac.');
-    }
-  };
-  reader.readAsText(file);
-  libInput.value='';
-};
 
 function render(){
   renderTabs();
@@ -520,7 +564,7 @@ function render(){
 
 /* ---------- Tab bar ---------- */
 function renderTabs(){
-  const tabs=[['build','Build'],['mashup','Mashup'],['history','History'],['timer','Timer']];
+  const tabs=[['build','Sets'],['mashup','Mashup'],['history','History'],['timer','Timer']];
   tabbar.innerHTML = tabs.map(([k,label])=>{
     const badge = (k==='history' && history.length) ? `<span class="tbadge">${history.length}</span>` : '';
     return `<button class="tab ${activeTab===k?'on':''}" data-tab="${k}">${label}${badge}</button>`;
@@ -533,7 +577,7 @@ function renderTabs(){
 function renderHistory(){
   if(history.length===0){
     view.innerHTML = `<div class="sectlabel">History</div>
-      <div class="empty">No sets saved yet.<br>Build a set under <b>Build</b> and tap <b>Save</b> to keep it here.</div>`;
+      <div class="empty">No sets saved yet.<br>Build a set under <b>Sets</b> and tap <b>Save</b> to keep it here.</div>`;
     return;
   }
   view.innerHTML = `
@@ -633,9 +677,10 @@ function renderPicker(){
   const list=document.getElementById('picklist');
   function draw(){
     const term=q.value.toLowerCase();
-    list.innerHTML = TRACKS
-      .filter(t=>!term || (t.t+t.a+t.g).toLowerCase().includes(term))
-      .map(t=>`<div class="pick" data-id="${t.id}">${playBtn(t)}
+    const shown = TRACKS.filter(t=>!term || (t.t+t.a+t.g).toLowerCase().includes(term));
+    shown.slice(0,12).forEach(t=>prefetch(ptOf(t)));
+    list.innerHTML = shown
+      .map(t=>`<div class="pick" data-id="${t.id}">${playBtn(t)}${svcBtn(t)}
           <div class="ti"><div class="t">${t.t}</div>
             <div class="a">${t.a} · <span class="genrepill">${t.g}</span></div></div>
           <div class="meta"><span class="tag key">${t.key}</span>
@@ -666,7 +711,7 @@ function renderBuilder(){
     return `${i>0?'<div class="connector"></div>':''}
       <div class="chiprow">
         <div class="step">${i+1}</div>
-        <div class="ctrack ${i===0?'first':''}">${playBtn(t)}
+        <div class="ctrack ${i===0?'first':''}">${playBtn(t)}${svcBtn(t)}
           <div class="ti"><div class="t">${t.t}</div><div class="a">${t.a}</div></div>
           <div class="meta"><span class="tag key">${t.key}</span>
             <span class="tag bpm">${t.bpm}</span><span class="tag en">E${t.en}</span></div>
@@ -684,7 +729,7 @@ function renderBuilder(){
     ].join('');
     return `<div class="scard ${cls}" data-add="${t.id}">
         <div class="barbg"></div>
-        <div class="srow">${playBtn(t)}
+        <div class="srow">${playBtn(t)}${svcBtn(t)}
           <div class="ti"><div class="t">${t.t}</div>
             <div class="a">${t.a} · <span class="genrepill">${t.g}</span></div></div>
           <div class="meta"><span class="tag key">${t.key}</span>
@@ -771,15 +816,18 @@ function mashTrackRow(role, t, cls){
     <span class="mrole ${cls}">${role}</span>
     <div class="minfo"><div class="mname">${esc(t.t)}</div><div class="mart">${esc(t.a)}</div></div>
     <span class="mkey">${t.key}</span><span class="mbpm">${t.bpm}</span>
-    ${playBtn(t)}</div>`;
+    ${playBtn(t)}${svcBtn(t)}</div>`;
 }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function renderMashup(){
   buildMashups();
+  mashupList.slice(0,8).forEach(m=>{ prefetch(ptOf(m.v)); prefetch(ptOf(m.inst)); });
   const cards = mashupList.map(m=>{
     const stars = mashupStars(m.w, m.delta);
     const starHtml = [0,1,2,3].map(i=>`<span class="mstar ${i<stars?'on':''}">★</span>`).join('');
+    const share = encodeURIComponent(
+      `🎚️ Mashup-Idee\n${m.v.t} – ${m.v.a} (${m.v.key}/${m.v.bpm})\n+ ${m.inst.t} – ${m.inst.a} (${m.inst.key}/${m.inst.bpm})\n${m.rel} · Δ${m.delta} BPM`);
     return `<div class="mcard">
       ${mashTrackRow('VOCAL', m.v, 'voc')}
       <div class="mplus">+</div>
@@ -787,6 +835,7 @@ function renderMashup(){
       <div class="mfoot">
         <span class="mbadge">${m.rel}</span>
         <span class="mbadge dim">Δ${m.delta} BPM</span>
+        <button class="mshare" data-share="${share}">⇪ Teilen</button>
         <span class="mstars">${starHtml}</span>
       </div></div>`;
   }).join('');
@@ -807,6 +856,12 @@ function renderMashup(){
     const ns=document.getElementById('mSeed'); ns.focus(); ns.setSelectionRange(pos,pos); };
   document.getElementById('mHouse').onclick=()=>{ mashupHouseOnly=!mashupHouseOnly; renderMashup(); };
   document.getElementById('mNew').onclick=()=>{ renderMashup(); window.scrollTo({top:0,behavior:'smooth'}); };
+  view.querySelectorAll('.mshare').forEach(el=>el.onclick=(e)=>{
+    e.stopPropagation();
+    const txt=decodeURIComponent(el.dataset.share);
+    if(navigator.share){ navigator.share({text:txt}).catch(()=>{}); }
+    else if(navigator.clipboard){ navigator.clipboard.writeText(txt); el.textContent='✓ Kopiert'; setTimeout(()=>{el.textContent='⇪ Teilen';},1500); }
+  });
   refreshPlay();
 }
 
